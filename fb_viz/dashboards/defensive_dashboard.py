@@ -222,10 +222,7 @@ class DefensiveDashboard:
             nrows=5,
             ncols=3,
             figheight=12,
-            title_space=0.025,
-            title_height=0.06,
             axis=False,
-            endnote_height=0.06,
             **grid_params,
         )
         fig.set_facecolor(pitch_color)
