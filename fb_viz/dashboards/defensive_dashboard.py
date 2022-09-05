@@ -208,7 +208,9 @@ class DefensiveDashboard:
         line_color="#ffffff",
         marker_base_color="#bbbbbb",
         linewidth=1,
+        grid_params=None,
     ):
+        grid_params = grid_params or {}
         pitch = Pitch(
             pitch_type="opta",
             pitch_color=pitch_color,
@@ -224,6 +226,7 @@ class DefensiveDashboard:
             title_height=0.06,
             axis=False,
             endnote_height=0.06,
+            **grid_params,
         )
         fig.set_facecolor(pitch_color)
         league = data["competition"].iloc[0]
