@@ -1,0 +1,4 @@
+mplsoccer
+seaborn
+sklearn
+git+http://github.com/dmoggles/footmav
