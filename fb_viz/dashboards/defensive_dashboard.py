@@ -98,8 +98,8 @@ class DefensiveDashboard:
 
         query1 = f"""
         SELECT T1.matchId, T1.home, T1.away, 
-            T2.us_team_name AS home_image_name, T2.decorated_name AS home_decorated_name, 
-            T3.us_team_name AS away_image_name, T3.decorated_name AS away_decorated_name
+            T2.ws_team_name AS home_image_name, T2.decorated_name AS home_decorated_name, 
+            T3.ws_team_name AS away_image_name, T3.decorated_name AS away_decorated_name
         FROM football_data.whoscored_meta AS T1 
 	        JOIN mclachbot_teams AS T2 
             ON T2.ws_team_name = T1.home
@@ -118,24 +118,40 @@ class DefensiveDashboard:
             self.home_away = "Home"
             self.team = home
             self.team_image_name = (
-                metadata_df["home_image_name"].iloc[0].replace(" ", "_")
+                metadata_df["home_image_name"]
+                .iloc[0]
+                .replace(" ", "_")
+                .replace(".", "")
+                .lower()
             )
             self.team_display_name = metadata_df["home_decorated_name"].iloc[0]
             self.opponent = away
             self.opponent_image_name = (
-                metadata_df["away_image_name"].iloc[0].replace(" ", "_")
+                metadata_df["away_image_name"]
+                .iloc[0]
+                .replace(" ", "_")
+                .replace(".", "")
+                .lower()
             )
             self.opponent_display_name = metadata_df["away_decorated_name"].iloc[0]
         else:
             self.home_away = "Away"
             self.team = away
             self.team_image_name = (
-                metadata_df["away_image_name"].iloc[0].replace(" ", "_")
+                metadata_df["away_image_name"]
+                .iloc[0]
+                .replace(" ", "_")
+                .replace(".", "")
+                .lower()
             )
             self.team_display_name = metadata_df["away_decorated_name"].iloc[0]
             self.opponent = home
             self.opponent_image_name = (
-                metadata_df["home_image_name"].iloc[0].replace(" ", "_")
+                metadata_df["home_image_name"]
+                .iloc[0]
+                .replace(" ", "_")
+                .replace(".", "")
+                .lower()
             )
             self.opponent_display_name = metadata_df["home_decorated_name"].iloc[0]
 
