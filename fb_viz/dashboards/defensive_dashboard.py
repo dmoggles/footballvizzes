@@ -35,6 +35,10 @@ class DefensiveDashboard:
         ax.get_yaxis().set_ticks([])
         ax.set_facecolor(facecolor)
         TITLE_TEXT = f"{self.team_display_name} vs {self.opponent_display_name} ({self.home_away.title()})"
+        if len(TITLE_TEXT) > 30:
+            size = 20
+        else:
+            size = 25
         ax.text(
             0.5,
             0.7,
@@ -43,7 +47,7 @@ class DefensiveDashboard:
             va="center",
             ha="center",
             fontproperties=font_bold.prop,
-            fontsize=25,
+            fontsize=size,
         )
         ax.text(
             0.5,
@@ -94,8 +98,8 @@ class DefensiveDashboard:
 
         query1 = f"""
         SELECT T1.matchId, T1.home, T1.away, 
-            T2.team_name AS home_image_name, T2.decorated_name AS home_decorated_name, 
-            T3.team_name AS away_image_name, T3.decorated_name AS away_decorated_name
+            T2.us_team_name AS home_image_name, T2.decorated_name AS home_decorated_name, 
+            T3.us_team_name AS away_image_name, T3.decorated_name AS away_decorated_name
         FROM football_data.whoscored_meta AS T1 
 	        JOIN mclachbot_teams AS T2 
             ON T2.ws_team_name = T1.home
@@ -113,18 +117,26 @@ class DefensiveDashboard:
         if home == team:
             self.home_away = "Home"
             self.team = home
-            self.team_image_name = metadata_df["home_image_name"].iloc[0]
+            self.team_image_name = (
+                metadata_df["home_image_name"].iloc[0].replace(" ", "_")
+            )
             self.team_display_name = metadata_df["home_decorated_name"].iloc[0]
             self.opponent = away
-            self.opponent_image_name = metadata_df["away_image_name"].iloc[0]
+            self.opponent_image_name = (
+                metadata_df["away_image_name"].iloc[0].replace(" ", "_")
+            )
             self.opponent_display_name = metadata_df["away_decorated_name"].iloc[0]
         else:
             self.home_away = "Away"
             self.team = away
-            self.team_image_name = metadata_df["away_image_name"].iloc[0]
+            self.team_image_name = (
+                metadata_df["away_image_name"].iloc[0].replace(" ", "_")
+            )
             self.team_display_name = metadata_df["away_decorated_name"].iloc[0]
             self.opponent = home
-            self.opponent_image_name = metadata_df["home_image_name"].iloc[0]
+            self.opponent_image_name = (
+                metadata_df["home_image_name"].iloc[0].replace(" ", "_")
+            )
             self.opponent_display_name = metadata_df["home_decorated_name"].iloc[0]
 
         query2 = f"""
@@ -156,10 +168,10 @@ class DefensiveDashboard:
         position_array = player_data.loc[
             (~player_data["position"].isin(["Substitute", "Error"])), "position"
         ]
-        if player_data.shape[0] > 0:
+        if position_array.shape[0] > 0:
             position = position_array.iloc[0]
         else:
-            position = ""
+            position = "Sub"
         number_array = player_data.loc[
             (~player_data["position"].isin(["Substitute", "Error"])),
             "shirt_number",

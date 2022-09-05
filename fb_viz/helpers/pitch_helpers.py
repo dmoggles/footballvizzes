@@ -164,11 +164,15 @@ def draw_convex_hull_without_outliers_on_axes(
         )  # excludes corners
     ].copy()
     total_touches["include"] = model.fit_predict(total_touches[["x", "y"]])
-    hull = pitch.convexhull(
-        total_touches.loc[total_touches["include"] == 1, "x"],
-        total_touches.loc[total_touches["include"] == 1, "y"],
-    )
-    poly = pitch.polygon(
-        hull, ax=ax, edgecolor=color, facecolor=color, alpha=0.3, zorder=3
-    )
-    return poly
+    included = total_touches.loc[total_touches["include"] == 1]
+    if included.shape[0] >= 4:
+        hull = pitch.convexhull(
+            included["x"],
+            included["y"],
+        )
+        poly = pitch.polygon(
+            hull, ax=ax, edgecolor=color, facecolor=color, alpha=0.3, zorder=3
+        )
+        return poly
+    else:
+        return None
