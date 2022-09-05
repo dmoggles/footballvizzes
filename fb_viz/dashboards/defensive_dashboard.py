@@ -1,4 +1,5 @@
 import pandas as pd
+from fb_viz.helpers.mclachbot_helpers import get_mclachhead
 from fb_viz.helpers.mplsoccer_helpers import make_grid
 from fb_viz.helpers.pitch_helpers import (
     draw_defensive_event_legend,
@@ -228,8 +229,12 @@ class DefensiveDashboard:
         league = data["competition"].iloc[0]
         home_team_image = self.image_grabber(self.team_image_name, league)
         away_team_image = self.image_grabber(self.opponent_image_name, league)
-        add_image(home_team_image, fig, left=0.05, bottom=0.89, width=0.05)
-        add_image(away_team_image, fig, left=0.90, bottom=0.89, width=0.05)
+        add_image(home_team_image, fig, left=0.05, bottom=0.95, width=0.05)
+        add_image(away_team_image, fig, left=0.90, bottom=0.95, width=0.05)
+        add_image(
+            get_mclachhead(), fig, left=0.89, bottom=0.00, width=0.07, height=0.07
+        )
+
         endnode = draw_defensive_event_legend(
             axes["endnote"],
             marker_base_color,
@@ -239,6 +244,7 @@ class DefensiveDashboard:
             framealpha=0,
             edgecolor=pitch_color,
             facecolor=pitch_color,
+            loc="upper left",
         )
         names = self.extract_names_sorted_by_position(data, exclude_positions=["GK"])
         for i, name in enumerate(names):
@@ -269,7 +275,7 @@ class DefensiveDashboard:
         axes["endnote"].text(
             s="@McLachBot | www.mclachbot.com",
             x=0.99,
-            y=0.01,
+            y=-0.30,
             ha="right",
             va="bottom",
             transform=axes["endnote"].transAxes,
