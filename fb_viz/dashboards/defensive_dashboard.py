@@ -221,7 +221,6 @@ class DefensiveDashboard:
             pitch,
             nrows=5,
             ncols=3,
-            figheight=12,
             axis=False,
             **grid_params,
         )
