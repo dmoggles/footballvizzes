@@ -163,6 +163,8 @@ def draw_convex_hull_without_outliers_on_axes(
             & ~WF.col_has_qualifier(data, qualifier_code=6)
         )  # excludes corners
     ].copy()
+    if total_touches.shape[0] <= 4:
+        return None
     total_touches["include"] = model.fit_predict(total_touches[["x", "y"]])
     included = total_touches.loc[total_touches["include"] == 1]
     if included.shape[0] >= 4:
