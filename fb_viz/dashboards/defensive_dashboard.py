@@ -118,40 +118,24 @@ class DefensiveDashboard:
             self.home_away = "Home"
             self.team = home
             self.team_image_name = (
-                metadata_df["home_image_name"]
-                .iloc[0]
-                .replace(" ", "_")
-                .replace(".", "")
-                .lower()
+                metadata_df["home_image_name"].iloc[0].replace(".", "").lower()
             )
             self.team_display_name = metadata_df["home_decorated_name"].iloc[0]
             self.opponent = away
             self.opponent_image_name = (
-                metadata_df["away_image_name"]
-                .iloc[0]
-                .replace(" ", "_")
-                .replace(".", "")
-                .lower()
+                metadata_df["away_image_name"].iloc[0].replace(".", "").lower()
             )
             self.opponent_display_name = metadata_df["away_decorated_name"].iloc[0]
         else:
             self.home_away = "Away"
             self.team = away
             self.team_image_name = (
-                metadata_df["away_image_name"]
-                .iloc[0]
-                .replace(" ", "_")
-                .replace(".", "")
-                .lower()
+                metadata_df["away_image_name"].iloc[0].replace(".", "").lower()
             )
             self.team_display_name = metadata_df["away_decorated_name"].iloc[0]
             self.opponent = home
             self.opponent_image_name = (
-                metadata_df["home_image_name"]
-                .iloc[0]
-                .replace(" ", "_")
-                .replace(".", "")
-                .lower()
+                metadata_df["home_image_name"].iloc[0].replace(".", "").lower()
             )
             self.opponent_display_name = metadata_df["home_decorated_name"].iloc[0]
 
@@ -257,8 +241,10 @@ class DefensiveDashboard:
         league = data["competition"].iloc[0]
         home_team_image = self.image_grabber(self.team_image_name, league)
         away_team_image = self.image_grabber(self.opponent_image_name, league)
-        add_image(home_team_image, fig, left=0.05, bottom=0.95, width=0.05)
-        add_image(away_team_image, fig, left=0.90, bottom=0.95, width=0.05)
+        if home_team_image:
+            add_image(home_team_image, fig, left=0.05, bottom=0.95, width=0.05)
+        if away_team_image:
+            add_image(away_team_image, fig, left=0.90, bottom=0.95, width=0.05)
         add_image(
             get_mclachhead(), fig, left=0.89, bottom=0.00, width=0.07, height=0.07
         )
