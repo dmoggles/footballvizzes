@@ -28,6 +28,7 @@ setup(
         "footmav @ git+http://github.com/dmoggles/footmav",
         "scipy",
         "matplotlib>=3.5.3",
+        "tabulate",
     ],
     classifiers=[
         "Development Status :: 1 - Planning",
