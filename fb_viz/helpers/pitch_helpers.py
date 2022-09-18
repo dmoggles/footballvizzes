@@ -13,7 +13,7 @@ from matplotlib.lines import Line2D
 import numpy as np
 from math import ceil
 from fb_viz.helpers.fonts import font_normal
-from fb_viz.helpers.mclachbot_helpers import team_colours
+from fb_viz.helpers.team_colour_helpers import team_colours
 from matplotlib.colors import to_rgba
 
 

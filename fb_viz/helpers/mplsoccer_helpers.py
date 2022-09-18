@@ -166,7 +166,7 @@ def make_grid(
     left_coordinates = np.tile(left_coordinates, nrows)
     left_coordinates = left_coordinates + left
 
-    fig = Figure(figsize=(figwidth, figheight))
+    fig = Figure(figsize=(figwidth, figheight), dpi=100)
     axs = []
     for idx, bottom_coord in enumerate(bottom_coordinates):
         axs.append(

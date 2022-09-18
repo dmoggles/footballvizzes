@@ -161,14 +161,7 @@ class PassNetworkDashboard(WithFormationDataMixin, Dashboard):
         self.populate_sidepanel(data, axes["sidepanel"], pitch_color, line_color)
 
         starters, subs = lineup_card(data)
-        starters_count_width = starters.find("\n")
-        starters_title_formatter = (
-            r"{:^"
-            + str(starters_count_width)
-            + "}\n"
-            + "-" * starters_count_width
-            + "\n"
-        )
+
         axes["sidepanel"].text(
             transform=axes["sidepanel"].transAxes,
             color=line_color,
