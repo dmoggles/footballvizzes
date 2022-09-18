@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from footmav.data_definitions.whoscored.constants import EventType
+from footmav.utils import whoscored_funcs as WF
 
 
 @dataclass
@@ -11,6 +12,77 @@ class EventDefinition:
     color: str = None
     edge_color: str = None
     size_mult: float = 1
+
+
+def get_attacking_touch_events(data):
+    attacking_touch_events = [
+        EventType.TakeOn,
+        EventType.ShotOnPost,
+        EventType.BallTouch,
+        EventType.GoodSkill,
+        EventType.Goal,
+        EventType.MissedShots,
+        EventType.SavedShot,
+    ]
+    attacking_touch_events = [EventType(e) for e in attacking_touch_events]
+
+    attacking_touches = data.loc[
+        (data["event_type"].isin(attacking_touch_events))
+        | ((data["event_type"] == EventType.Foul) & (data["outcomeType"] == 1))
+        | (
+            (
+                (data["event_type"] == EventType.Pass)
+                | (data["event_type"] == EventType.OffsidePass)
+            )
+            & ~(
+                WF.col_has_qualifier(data, qualifier_code=6)
+                | WF.col_has_qualifier(data, display_name="ThrowIn")
+            )
+        )  # excludes corners and throw-ins
+    ].copy()
+    return attacking_touches
+
+
+def get_touch_events(data):
+    touch_events = [
+        2,
+        3,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        41,
+        42,
+        44,
+        45,
+        49,
+        50,
+        54,
+        61,
+        74,
+    ]
+    touch_events = [EventType(e) for e in touch_events]
+
+    total_touches = data.loc[
+        (data["event_type"].isin(touch_events))
+        | ((data["event_type"] == EventType.Foul) & (data["outcomeType"] == 1))
+        | (
+            (
+                (data["event_type"] == EventType.Pass)
+                | (data["event_type"] == EventType.OffsidePass)
+            )
+            & ~(
+                WF.col_has_qualifier(data, qualifier_code=6)
+                | WF.col_has_qualifier(data, display_name="ThrowIn")
+            )
+        )  # excludes corners and throw-ins
+    ].copy()
+    return total_touches
 
 
 defensive_events = [

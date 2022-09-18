@@ -1,14 +1,20 @@
-from footmav.data_definitions.whoscored.constants import EventType
+from footmav.data_definitions.whoscored.constants import EventType, PassType
 from footmav.utils import whoscored_funcs as WF
 import pandas as pd
 import matplotlib.pyplot as plt
 from mplsoccer.pitch import Pitch
-from fb_viz.definitions.events import EventDefinition, defensive_events
+from fb_viz.definitions.events import (
+    EventDefinition,
+    defensive_events,
+    get_touch_events,
+)
 from sklearn.ensemble import IsolationForest
 from matplotlib.lines import Line2D
 import numpy as np
 from math import ceil
 from fb_viz.helpers.fonts import font_normal
+from fb_viz.helpers.mclachbot_helpers import team_colours
+from matplotlib.colors import to_rgba
 
 
 def apply_event_plot(
@@ -131,38 +137,7 @@ def draw_convex_hull_without_outliers_on_axes(
 ):
     """Draw the convex hull without outliers on the axes"""
     model = IsolationForest(contamination=outlier_ratio, random_state=0)
-    touch_events = [
-        2,
-        3,
-        7,
-        8,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        41,
-        42,
-        44,
-        45,
-        49,
-        50,
-        54,
-        61,
-        74,
-    ]
-    touch_events = [EventType(e) for e in touch_events]
-
-    total_touches = data.loc[
-        (data["event_type"].isin(touch_events))
-        | ((data["event_type"] == EventType.Foul) & (data["outcomeType"] == 1))
-        | (
-            (data["event_type"] == EventType.Pass)
-            & ~WF.col_has_qualifier(data, qualifier_code=6)
-        )  # excludes corners
-    ].copy()
+    total_touches = get_touch_events(data)
     if total_touches.shape[0] <= 4:
         return None
     total_touches["include"] = model.fit_predict(total_touches[["x", "y"]])
@@ -178,3 +153,290 @@ def draw_convex_hull_without_outliers_on_axes(
         return poly
     else:
         return None
+
+
+def get_starter_locations(data, label_column):
+    subs = data.loc[data["event_type"] == EventType.SubstitutionOn, "player_name"]
+
+    starter_actions = get_touch_events(data.loc[~data["player_name"].isin(subs)])
+    by_player = starter_actions.groupby(list(set(["player_name", label_column]))).agg(
+        {"x": ["count", "mean"], "y": ["mean"]}
+    )
+    by_player.columns = ["count", "x", "y"]
+    by_player = by_player.reset_index()
+    return by_player
+
+
+def get_locations_by_starting_formation(data, label_column):
+
+    actions = get_touch_events(data.loc[data["formation"] == data["formation"].iloc[0]])
+    py_position = actions.groupby(list(set(["position", label_column]))).agg(
+        {"x": ["count", "mean"], "y": ["mean"]}
+    )
+    py_position.columns = ["count", "x", "y"]
+    py_position = py_position.reset_index()
+    return py_position
+
+
+def plot_average_position_on_pitch_by_player_for_starters(
+    ax, pitch, data, min_size=15, max_size=40, max_count=120
+):
+    label_column = "shirt_number"
+    team = data["team"].iloc[0]
+    league = data["competition"].iloc[0]
+    by_player = get_starter_locations(data, label_column)
+    by_player["s"] = min_size + by_player["count"] / max_count * (max_size - min_size)
+    colours = team_colours(team, league)
+    pitch.scatter(
+        by_player["x"],
+        by_player["y"],
+        s=by_player["s"] ** 2,
+        ax=ax,
+        zorder=4,
+        c=colours[0],
+    )
+    for i, row in by_player.iterrows():
+        pitch.annotate(
+            row[label_column],
+            xy=(row.x, row.y),
+            va="center",
+            ha="center",
+            zorder=5,
+            ax=ax,
+            c=colours[1],
+        )
+
+
+def plot_average_position_on_pitch_by_position_for_starting_formation(
+    ax, pitch, data, min_size=15, max_size=40, max_count=120
+):
+    label_column = "position"
+    team = data["team"].iloc[0]
+    league = data["competition"].iloc[0]
+    by_player = get_locations_by_starting_formation(data, label_column)
+    by_player["s"] = min_size + by_player["count"] / max_count * (max_size - min_size)
+    colours = team_colours(team, league)
+    pitch.scatter(
+        by_player["x"],
+        by_player["y"],
+        s=by_player["s"] ** 2,
+        ax=ax,
+        zorder=4,
+        c=colours[0],
+    )
+    for i, row in by_player.iterrows():
+        pitch.annotate(
+            row[label_column],
+            xy=(row.x, row.y),
+            va="center",
+            ha="center",
+            zorder=5,
+            ax=ax,
+            c=colours[1],
+        )
+
+
+def get_starter_pass_network_by_name(data, min_combinations):
+    subs = data.loc[data["event_type"] == EventType.SubstitutionOn, "player_name"]
+
+    player_passes = data.loc[
+        (data["event_type"] == EventType.Pass)
+        & (data["outcomeType"] == 1)
+        & (~data["player_name"].isin(subs))
+        & (~data["pass_receiver"].isin(subs))
+        & (data["pass_receiver"].notnull())
+    ].copy()
+    player_passes["pair"] = player_passes.apply(
+        lambda r: "_".join(
+            sorted([r["player_name"], r["pass_receiver"] if r["pass_receiver"] else ""])
+        ),
+        axis=1,
+    )
+
+    player_passes["progressive_pass"] = player_passes["passtypes"].apply(
+        lambda x: x & (1 << (PassType.PROGRESSIVE.value - 1)) > 0
+    )
+    pass_groupings = player_passes.groupby("pair").agg(
+        {
+            "x": "count",
+            "player_name": "first",
+            "pass_receiver": "first",
+            "progressive_pass": "sum",
+        }
+    )
+    pass_groupings = pass_groupings[pass_groupings["pass_receiver"].notnull()]
+    pass_groupings.columns = ["count", "player", "receiver", "progressive_count"]
+    pass_groupings = pass_groupings.loc[pass_groupings["count"] >= min_combinations]
+    return pass_groupings
+
+
+def get_starter_pass_network_by_position(data, min_combinations):
+    subs = data.loc[data["event_type"] == EventType.SubstitutionOn, "player_name"]
+
+    player_passes = data.loc[
+        (data["event_type"] == EventType.Pass)
+        & (data["outcomeType"] == 1)
+        & (data["formation"] == data["formation"].iloc[0])
+        & (data["pass_receiver"].notnull())
+    ].copy()
+    player_passes["pair"] = player_passes.apply(
+        lambda r: "_".join(
+            sorted(
+                [
+                    r["position"],
+                    r["pass_receiver_position"] if r["pass_receiver_position"] else "",
+                ]
+            )
+        ),
+        axis=1,
+    )
+
+    player_passes["progressive_pass"] = player_passes["passtypes"].apply(
+        lambda x: x & (1 << (PassType.PROGRESSIVE.value - 1)) > 0
+    )
+    pass_groupings = player_passes.groupby("pair").agg(
+        {
+            "x": "count",
+            "position": "first",
+            "pass_receiver_position": "first",
+            "progressive_pass": "sum",
+        }
+    )
+    pass_groupings = pass_groupings[pass_groupings["pass_receiver_position"].notnull()]
+    pass_groupings.columns = ["count", "player", "receiver", "progressive_count"]
+    pass_groupings = pass_groupings.loc[pass_groupings["count"] >= min_combinations]
+    return pass_groupings
+
+
+def plot_pass_network_on_pitch_by_player_for_starters(
+    ax,
+    pitch,
+    data,
+    max_combinations=20,
+    min_width=1,
+    max_width=20,
+    min_transparency=0.3,
+    min_combinations=3,
+):
+    pass_groupings = get_starter_pass_network_by_name(data, min_combinations)
+    average_positions = get_starter_locations(data, "shirt_number")
+    pass_groupings = pd.merge(
+        pass_groupings,
+        average_positions[["player_name", "x", "y"]],
+        left_on="player",
+        right_on="player_name",
+        how="left",
+    ).rename(columns={"x": "start_x", "y": "start_y"})
+    pass_groupings = pd.merge(
+        pass_groupings,
+        average_positions[["player_name", "x", "y"]],
+        left_on="receiver",
+        right_on="player_name",
+        how="left",
+    ).rename(columns={"x": "end_x", "y": "end_y"})
+
+    total_max = max(pass_groupings["count"].max(), max_combinations)
+    pass_groupings["width"] = min_width + (
+        pass_groupings["count"] - min_combinations
+    ) / total_max * (max_width - min_width)
+    pass_groupings["pp_width"] = min_width + (
+        pass_groupings["progressive_count"] - min_combinations
+    ) / total_max * (max_width - min_width)
+
+    pass_groupings_pp = pass_groupings.loc[
+        pass_groupings["progressive_count"] > min_combinations
+    ]
+    color = np.array(to_rgba("white"))
+    color = np.tile(color, (len(pass_groupings), 1))
+    c_transparency = min_transparency + (
+        pass_groupings["count"] - min_combinations
+    ) / total_max * (1 - min_transparency)
+    color[:, 3] = c_transparency
+    pitch.lines(
+        pass_groupings["start_x"],
+        pass_groupings["start_y"],
+        pass_groupings["end_x"],
+        pass_groupings["end_y"],
+        ax=ax,
+        color=color,
+        lw=pass_groupings["width"],
+        zorder=2,
+    )
+    pitch.lines(
+        pass_groupings_pp["start_x"],
+        pass_groupings_pp["start_y"],
+        pass_groupings_pp["end_x"],
+        pass_groupings_pp["end_y"],
+        ax=ax,
+        color="red",
+        lw=pass_groupings_pp["pp_width"],
+        zorder=3,
+    )
+    return pass_groupings
+
+
+def plot_pass_network_on_pitch_by_position_for_starting_formation(
+    ax,
+    pitch,
+    data,
+    max_combinations=20,
+    min_width=1,
+    max_width=20,
+    min_transparency=0.3,
+    min_combinations=3,
+):
+    pass_groupings = get_starter_pass_network_by_position(data, min_combinations)
+    average_positions = get_locations_by_starting_formation(data, "position")
+    pass_groupings = pd.merge(
+        pass_groupings,
+        average_positions[["position", "x", "y"]],
+        left_on="player",
+        right_on="position",
+        how="left",
+    ).rename(columns={"x": "start_x", "y": "start_y"})
+    pass_groupings = pd.merge(
+        pass_groupings,
+        average_positions[["position", "x", "y"]],
+        left_on="receiver",
+        right_on="position",
+        how="left",
+    ).rename(columns={"x": "end_x", "y": "end_y"})
+
+    total_max = max(pass_groupings["count"].max(), max_combinations)
+    pass_groupings["width"] = min_width + (
+        pass_groupings["count"] - min_combinations
+    ) / total_max * (max_width - min_width)
+    pass_groupings["pp_width"] = min_width + (
+        pass_groupings["progressive_count"] - min_combinations
+    ) / total_max * (max_width - min_width)
+
+    pass_groupings_pp = pass_groupings.loc[
+        pass_groupings["progressive_count"] > min_combinations
+    ]
+    color = np.array(to_rgba("white"))
+    color = np.tile(color, (len(pass_groupings), 1))
+    c_transparency = min_transparency + (
+        pass_groupings["count"] - min_combinations
+    ) / total_max * (1 - min_transparency)
+    color[:, 3] = c_transparency
+    pitch.lines(
+        pass_groupings["start_x"],
+        pass_groupings["start_y"],
+        pass_groupings["end_x"],
+        pass_groupings["end_y"],
+        ax=ax,
+        color=color,
+        lw=pass_groupings["width"],
+        zorder=2,
+    )
+    pitch.lines(
+        pass_groupings_pp["start_x"],
+        pass_groupings_pp["start_y"],
+        pass_groupings_pp["end_x"],
+        pass_groupings_pp["end_y"],
+        ax=ax,
+        color="red",
+        lw=pass_groupings_pp["pp_width"],
+        zorder=3,
+    )
+    return pass_groupings

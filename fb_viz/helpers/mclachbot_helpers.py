@@ -1,6 +1,9 @@
+from typing import Dict, List
 from urllib.error import HTTPError
 from PIL import Image
 from urllib.request import urlopen
+import requests
+import json
 
 
 def get_image_remote(team_name: str, league: str) -> Image:
@@ -22,5 +25,31 @@ def sportsdb_image_grabber(team: str, league: str):
     url = f"http://www.mclachbot.com:9000/badge_download/{league}/{team}"
     try:
         return Image.open(urlopen(url))
+    except HTTPError:
+        return None
+
+
+def team_colours(
+    team: str,
+    league: str,
+    existing_map: Dict[str, List[str]] = None,
+    default_colours: List[str] = None,
+) -> List[str]:
+    default_colours = default_colours or ["#bbbbbb", "#000000"]
+    existing_map = existing_map or {}
+
+    league = league.replace(" ", "%20")
+    team = team.replace(" ", "%20")
+    url = f"http://www.mclachbot.com:9000/colours/{league}/{team}"
+    try:
+        r = requests.get(url)
+        if r.status_code == 200:
+            colours = json.loads(r.text)
+            if not colours[0]:
+                return default_colours
+            return colours
+        else:
+            return default_colours
+
     except HTTPError:
         return None
