@@ -27,7 +27,7 @@ setup(
         "sklearn",
         "footmav @ git+http://github.com/dmoggles/footmav",
         "scipy",
-        "matplotlib>=3.5.3",
+        "matplotlib==3.5.3",
         "tabulate",
     ],
     classifiers=[
