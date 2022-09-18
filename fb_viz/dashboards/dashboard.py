@@ -16,6 +16,7 @@ class Dashboard(ABC):
         "grid_height": 0.85,
         "endnote_height": 0.06,
     }
+    PITCH_COLOR = "#000011"
     GRID_NROWS = 1
     GRID_NCOLS = 1
     HOME_IMAGE_COORDS = (0.05, 0.95, 0.05)
@@ -161,12 +162,13 @@ class Dashboard(ABC):
     def plot(
         self,
         data,
-        pitch_color="#000011",
+        pitch_color=None,
         line_color="#ffffff",
         marker_base_color="#bbbbbb",
         linewidth=1,
         grid_params=None,
     ):
+        pitch_color = pitch_color or self.PITCH_COLOR
         grid_params = grid_params or self.GRID_PARAMETERS
         pitch = Pitch(
             pitch_type="opta",
@@ -201,6 +203,7 @@ class Dashboard(ABC):
                 fontsize=10,
                 **self.WATERMARK_DICT,
             )
+            axes["endnote"].set_facecolor(pitch_color)
         return self._dashboard_plot_impl(
             fig, axes, pitch, data, pitch_color, line_color, marker_base_color
         )
