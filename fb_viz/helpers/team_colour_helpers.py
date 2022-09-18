@@ -76,7 +76,7 @@ def team_colours(
         r = requests.get(url)
         if r.status_code == 200:
             colours = json.loads(r.text)
-            if not colours[0]:
+            if not colours[0] or colours[0] == "None":
                 return default_colours
             return colours
         else:
