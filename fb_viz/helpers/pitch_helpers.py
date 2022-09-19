@@ -277,7 +277,8 @@ def get_starter_pass_network_by_position(data, min_combinations):
         (data["event_type"] == EventType.Pass)
         & (data["outcomeType"] == 1)
         & (data["formation"] == data["formation"].iloc[0])
-        & (data["pass_receiver"].notnull())
+        & (data["pass_receiver_position"].notnull())
+        & (data["position"].notnull())
     ].copy()
     player_passes["pair"] = player_passes.apply(
         lambda r: "_".join(
