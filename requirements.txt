@@ -4,3 +4,4 @@ sklearn
 matplotlib==3.5.3
 git+http://github.com/dmoggles/footmav
 tabulate
+cmasher

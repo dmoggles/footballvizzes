@@ -15,6 +15,8 @@ from math import ceil
 from fb_viz.helpers.fonts import font_normal
 from fb_viz.helpers.team_colour_helpers import team_colours
 from matplotlib.colors import to_rgba
+from footmav.utils import whoscored_funcs as wf
+import matplotlib.patheffects as path_effects
 
 
 def apply_event_plot(
@@ -46,6 +48,203 @@ def apply_event_plot(
         alpha=0.7,
         linewidth=1,
         zorder=10,
+    )
+
+
+def draw_passes_on_axes(
+    ax: plt.Axes,
+    data: pd.DataFrame,
+    pitch: Pitch,
+    linewidth: float = 3,
+):
+    data["passtypes"] = wf.classify_passes(data)
+    passes = data.loc[
+        (data["event_type"] == EventType.Pass)
+        & (~wf.col_has_qualifier(data, qualifier_code=107))
+    ]
+    regular_pass_complete = passes.loc[
+        (passes["outcomeType"] == 1) & (passes["passtypes"] == 0)
+    ]
+    regular_pass_incomplete = passes.loc[
+        (passes["outcomeType"] == 0) & (passes["passtypes"] == 0)
+    ]
+    progressive_pass_complete = passes.loc[
+        (passes["outcomeType"] == 1) & (passes["passtypes"] == 2)
+    ]
+    progressive_pass_incomplete = passes.loc[
+        (passes["outcomeType"] == 0) & (passes["passtypes"] == 2)
+    ]
+    cutbacks_complete = passes.loc[
+        (passes["outcomeType"] == 1) & (passes["passtypes"] % 2 == 1)
+    ]
+    cutbacks_incomplete = passes.loc[
+        (passes["outcomeType"] == 0) & (passes["passtypes"] % 2 == 1)
+    ]
+    if regular_pass_complete.shape[0] > 0:
+        pitch.lines(
+            regular_pass_complete["x"],
+            regular_pass_complete["y"],
+            regular_pass_complete["endX"],
+            regular_pass_complete["endY"],
+            lw=linewidth,
+            transparent=True,
+            comet=True,
+            label="completed passes",
+            capstyle="round",
+            color="lightcoral",
+            ax=ax,
+            zorder=3,
+        )
+    if regular_pass_incomplete.shape[0] > 0:
+        pitch.lines(
+            regular_pass_incomplete["x"],
+            regular_pass_incomplete["y"],
+            regular_pass_incomplete["endX"],
+            regular_pass_incomplete["endY"],
+            lw=linewidth,
+            transparent=True,
+            comet=True,
+            label="incomplete passes",
+            capstyle="round",
+            color="darkred",
+            ax=ax,
+            alpha=0.6,
+        )
+    if progressive_pass_complete.shape[0] > 0:
+        pitch.lines(
+            progressive_pass_complete["x"],
+            progressive_pass_complete["y"],
+            progressive_pass_complete["endX"],
+            progressive_pass_complete["endY"],
+            lw=linewidth,
+            transparent=True,
+            comet=True,
+            label="completed progressive passes",
+            capstyle="round",
+            color="lightblue",
+            ax=ax,
+            zorder=3,
+        )
+    if progressive_pass_incomplete.shape[0] > 0:
+        pitch.lines(
+            progressive_pass_incomplete["x"],
+            progressive_pass_incomplete["y"],
+            progressive_pass_incomplete["endX"],
+            progressive_pass_incomplete["endY"],
+            lw=linewidth,
+            transparent=True,
+            comet=True,
+            label="incomplete progressive passes",
+            capstyle="round",
+            color="blue",
+            ax=ax,
+            alpha=0.6,
+        )
+    if cutbacks_complete.shape[0] > 0:
+        pitch.lines(
+            cutbacks_complete["x"],
+            cutbacks_complete["y"],
+            cutbacks_complete["endX"],
+            cutbacks_complete["endY"],
+            lw=linewidth,
+            transparent=True,
+            comet=True,
+            label="completed cutbacks",
+            capstyle="round",
+            color="lightgreen",
+            ax=ax,
+            zorder=3,
+        )
+    if cutbacks_incomplete.shape[0] > 0:
+        pitch.lines(
+            cutbacks_incomplete["x"],
+            cutbacks_incomplete["y"],
+            cutbacks_incomplete["endX"],
+            cutbacks_incomplete["endY"],
+            lw=linewidth,
+            transparent=True,
+            comet=True,
+            label="incomplete progressive passes",
+            capstyle="round",
+            color="green",
+            ax=ax,
+            alpha=0.6,
+        )
+
+
+def draw_pass_legend_on_axes(
+    ax: plt.Axes, base_color: str, base_edge_color: str, loc: str = "lower left"
+):
+    legend_elements = [
+        Line2D(
+            [0],
+            [0],
+            color="lightcoral",
+            marker="o",
+            label="Complete Pass",
+            markersize=5,
+            linewidth=0,
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="darkred",
+            marker="o",
+            label="Incomplete Pass",
+            markersize=5,
+            linewidth=0,
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="lightblue",
+            marker="o",
+            label="Complete Progressive Pass",
+            markersize=5,
+            linewidth=0,
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="blue",
+            marker="o",
+            label="Incomplete Progressive Pass",
+            markersize=5,
+            linewidth=0,
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="lightgreen",
+            marker="o",
+            label="Complete Cutback",
+            markersize=5,
+            linewidth=0,
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="green",
+            marker="o",
+            label="Incomplete Cutback",
+            markersize=5,
+            linewidth=0,
+        ),
+    ]
+    ax.legend(
+        ncol=3,
+        handles=legend_elements,
+        loc=loc,
+        # bbox_to_anchor=(0.0, 0.0),
+        facecolor=base_color,
+        edgecolor=base_edge_color,
+        labelcolor=base_edge_color,
+        framealpha=1,
+        labelspacing=0.5,
+        fancybox=True,
+        borderpad=0.25,
+        handletextpad=0.1,
+        prop=font_normal.prop,
     )
 
 
@@ -441,3 +640,50 @@ def plot_pass_network_on_pitch_by_position_for_starting_formation(
         zorder=3,
     )
     return pass_groupings
+
+
+def plot_positional_heatmap_on_pitch(
+    ax,
+    pitch,
+    data,
+    base_edge_color: str = "#ffffff",
+    scatter_color: str = "blue",
+    cmap="hot",
+):
+    passes_mask = (data["event_type"] == EventType.Pass) & (
+        ~wf.col_has_qualifier(data, qualifier_code=107)
+    )
+
+    path_eff = [
+        path_effects.Stroke(linewidth=3, foreground="black"),
+        path_effects.Normal(),
+    ]
+
+    bin_statistic = pitch.bin_statistic_positional(
+        data.loc[passes_mask].x,
+        data.loc[passes_mask].y,
+        statistic="count",
+        positional="full",
+        normalize=True,
+    )
+    pitch.heatmap_positional(
+        bin_statistic, ax=ax, cmap=cmap, edgecolors=base_edge_color
+    )
+    pitch.scatter(
+        data.loc[passes_mask].x,
+        data.loc[passes_mask].y,
+        c=scatter_color,
+        s=2,
+        ax=ax,
+    )
+    pitch.label_heatmap(
+        bin_statistic,
+        color=base_edge_color,
+        fontsize=11,
+        ax=ax,
+        ha="center",
+        va="center",
+        str_format="{:.0%}",
+        path_effects=path_eff,
+        zorder=20,
+    )

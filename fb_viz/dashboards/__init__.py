@@ -1,0 +1,3 @@
+from fb_viz.dashboards.defensive_dashboard import DefensiveDashboard
+from fb_viz.dashboards.passing_dashboard import PassingDashboard
+from fb_viz.dashboards.passnetwork_dashboard import PassNetworkDashboard

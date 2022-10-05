@@ -31,8 +31,8 @@ class Dashboard(ABC):
     )
     DEBUG = False
 
-    def __init__(self, engine, image_grabber):
-        self.engine = engine
+    def __init__(self, connection, image_grabber):
+        self.connection = connection
         self.image_grabber = image_grabber
 
     def standard_header(self, data, fig, ax, facecolor):
@@ -95,6 +95,9 @@ class Dashboard(ABC):
     def extract_names_sorted_by_position(self, data, exclude_positions=None):
         exclude_positions = exclude_positions or []
         subs = data.loc[data["event_type"] == EventType.SubstitutionOn, "player_name"]
+        
+
+        
         return (
             data.loc[
                 (~data["player_name"].isna())
@@ -125,7 +128,7 @@ class Dashboard(ABC):
         (home = '{team}' OR away = '{team}')
         """
 
-        metadata_df = pd.read_sql(query1, self.engine)
+        metadata_df = self.connection.query(query1)
         match_id = metadata_df["matchId"].iloc[0]
         home = metadata_df["home"].iloc[0]
         away = metadata_df["away"].iloc[0]
@@ -229,8 +232,8 @@ class WithFormationDataMixin:
         """
 
     def attach_positional_data(self, data):
-        position_df = pd.read_sql(
-            "SELECT * FROM football_data.whoscored_positions", self.engine
+        position_df = self.connection.query(
+            "SELECT * FROM football_data.whoscored_positions"
         )
         position_df["formation_name"] = position_df["formation_name"].apply(
             lambda x: x.replace("-", "")
@@ -251,8 +254,6 @@ class WithFormationDataMixin:
 
         query2 = self.DATA_QUERY.format(match_id, self.team)
 
-        data = pd.read_sql(query2, self.engine)
-        data["qualifiers"] = data["qualifiers"].apply(json.loads)
-        data["event_type"] = data["event_type"].apply(EventType)
+        data = self.connection.wsquery(query2)
 
         return self.attach_positional_data(data)
