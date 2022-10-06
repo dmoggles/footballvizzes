@@ -95,10 +95,8 @@ class Dashboard(ABC):
     def extract_names_sorted_by_position(self, data, exclude_positions=None):
         exclude_positions = exclude_positions or []
         subs = data.loc[data["event_type"] == EventType.SubstitutionOn, "player_name"]
-        
 
-        
-        return (
+        list_of_names = (
             data.loc[
                 (~data["player_name"].isna())
                 & (~data["player_name"].isin(subs))
@@ -107,10 +105,13 @@ class Dashboard(ABC):
             .groupby("player_name")
             .first()
             .reset_index()
-            .sort_values("team_player_formation")["player_name"]
+            .sort_values("sort_id")["player_name"]
             .tolist()
             + subs.tolist()
         )
+        if len(list_of_names) > 15:
+            list_of_names = list_of_names[:15]
+        return list_of_names
 
     def get_match_day_data(self, team: str, date: str) -> int:
 
@@ -229,6 +230,7 @@ class WithFormationDataMixin:
         JOIN football_data.whoscored_meta M
         ON W.matchId = M.matchId
         WHERE W.matchId = {} AND W.team = '{}'
+        ORDER BY W.period, W.minute, W.second, W.eventId
         """
 
     def attach_positional_data(self, data):

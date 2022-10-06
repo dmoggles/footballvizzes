@@ -23,6 +23,7 @@ class PassNetworkDashboard(WithFormationDataMixin, Dashboard):
         JOIN whoscored_meta M 
         ON W.matchId = M.matchId
         WHERE W.matchId = {} AND W.team = '{}'
+        ORDER BY W.period, W.minute, W.second, W.eventId
         """
 
     GRID_PARAMETERS = dict(
