@@ -25,9 +25,9 @@ class Dashboard(ABC):
     WATERMARK_DICT = dict(
         s="@McLachBot | www.mclachbot.com",
         x=0.99,
-        y=-0.30,
+        y=1.15,
         ha="right",
-        va="bottom",
+        va="top",
     )
     DEBUG = False
 
