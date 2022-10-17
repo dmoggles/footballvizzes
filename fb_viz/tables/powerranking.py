@@ -296,7 +296,9 @@ class PowerRank:
             "absolute",
             "relative",
         ], 'heatmap_style must be either "absolute" or "relative"'
-        styler.set_caption("Top 5 League Power Rankings - Based on last 5 games")
+        styler.set_caption(
+            "Top 5 League Power Rankings - Based on Last {num_games} Games"
+        )
         styler.set_properties(
             **{
                 "background-color": "#000011",
