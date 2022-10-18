@@ -155,6 +155,18 @@ class PowerRank:
         prev_aggregated["Rank (Overall)"] = prev_aggregated[metric_to_use].rank(
             ascending=False
         )
+        for i, g in aggregated.groupby("domestic league"):
+            aggregated.loc[
+                aggregated["domestic league"] == i, "Percentile Rank (League)"
+            ] = (g[metric_to_use].rank(pct=True) * 100)
+
+        for i, g in aggregated.groupby("squad"):
+            aggregated.loc[aggregated["squad"] == i, "Rank (Team)"] = g[
+                metric_to_use
+            ].rank(ascending=False)
+            aggregated.loc[aggregated["squad"] == i, "PCT Rank (Team)"] = (
+                g[metric_to_use].rank(pct=True) * 100
+            )
         aggregated["Rank Change"] = (
             pd.merge(
                 left=aggregated,
@@ -169,18 +181,6 @@ class PowerRank:
                 how="left",
             )["Rank (Overall)_x"]
         )
-        for i, g in aggregated.groupby("domestic league"):
-            aggregated.loc[
-                aggregated["domestic league"] == i, "Percentile Rank (League)"
-            ] = (g[metric_to_use].rank(pct=True) * 100)
-
-        for i, g in aggregated.groupby("squad"):
-            aggregated.loc[aggregated["squad"] == i, "Rank (Team)"] = g[
-                metric_to_use
-            ].rank(ascending=False)
-            aggregated.loc[aggregated["squad"] == i, "PCT Rank (Team)"] = (
-                g[metric_to_use].rank(pct=True) * 100
-            )
 
         return aggregated.sort_values(metric_to_use, ascending=False)
 
