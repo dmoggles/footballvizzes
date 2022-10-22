@@ -153,8 +153,8 @@ stats = [
     MatchStat("Ground Duels Won", stat_wrapper(agg.ground_duels_won)),
     MatchStat("Aerial Duels Won", stat_wrapper_success(agg.aerials)),
     MatchStat("Fouls", stat_wrapper(agg.fouls_conceded), reverse_success=True),
-    MatchStat("Yellow Cards", stat_wrapper(agg.yellow_cards)),
-    MatchStat("Red Cards", stat_wrapper(agg.red_cards)),
+    MatchStat("Yellow Cards", stat_wrapper(agg.yellow_cards), reverse_success=True),
+    MatchStat("Red Cards", stat_wrapper(agg.red_cards), reverse_success=True),
     MatchStat("Keeper Saves", stat_wrapper(agg.keeper_saves)),
 ]
 
@@ -168,12 +168,14 @@ class MatchSummaryDashboard:
         secondary_text_color="gray",
         success_color="green",
         failure_color="red",
+        neutral_color="yellow",
     ):
         self.background_color = background_color
         self.primary_text_color = primary_text_color
         self.secondary_text_color = secondary_text_color
         self.success_color = success_color
         self.failure_color = failure_color
+        self.neutral_color = neutral_color
         self._connection = connection
 
     def _prep_fig(self, figsize=(8, 8)) -> Tuple[Figure, Axes]:
@@ -296,8 +298,8 @@ class MatchSummaryDashboard:
                     home_color = self.failure_color
                     away_color = self.success_color
                 else:
-                    home_color = self.success_color
-                    away_color = self.success_color
+                    home_color = self.neutral_color
+                    away_color = self.neutral_color
 
                 ax.text(
                     0.15,
@@ -343,8 +345,8 @@ class MatchSummaryDashboard:
                     home_color = self.failure_color
                     away_color = self.success_color
                 else:
-                    home_color = self.success_color
-                    away_color = self.success_color
+                    home_color = self.neutral_color
+                    away_color = self.neutral_color
                 ax.text(
                     0.15,
                     0.80 - i * 0.05,
