@@ -3,7 +3,7 @@ import matplotlib.font_manager as fm
 
 
 def get_url(file_name):
-    return os.path.join(os.path.dirname(__file__), "..", "font_files", file_name)
+    return os.path.join(os.path.dirname(__file__), "../..", "font_files", file_name)
 
 
 class FontManagerLocal:
