@@ -1,20 +1,24 @@
-from mplsoccer import FontManager
+import os
+import matplotlib.font_manager as fm
 
-font_normal = FontManager(
-    (
-        "https://github.com/google/fonts/blob/main/apache/roboto/"
-        "Roboto%5Bwdth,wght%5D.ttf?raw=true"
-    )
+
+def get_url(file_name):
+    return os.path.join(os.path.dirname(__file__), "..", "font_files", file_name)
+
+
+class FontManagerLocal:
+    def __init__(self, path):
+        self._prop = fm.FontProperties(fname=path)
+
+    @property
+    def prop(self):
+        return self._prop
+
+
+font_normal = FontManagerLocal(
+    get_url("roboto_normal.ttf"),
 )
-font_italic = FontManager(
-    (
-        "https://github.com/google/fonts/blob/main/apache/roboto/"
-        "Roboto-Italic%5Bwdth,wght%5D.ttf?raw=true"
-    )
-)
-font_bold = FontManager(
-    (
-        "https://github.com/google/fonts/blob/main/apache/robotoslab/"
-        "RobotoSlab%5Bwght%5D.ttf?raw=true"
-    )
+font_italic = FontManagerLocal(get_url("roboto_italic.ttf"))
+font_bold = FontManagerLocal(
+    get_url("roboto_bold.ttf"),
 )
