@@ -22,3 +22,7 @@ font_italic = FontManagerLocal(get_url("roboto_italic.ttf"))
 font_bold = FontManagerLocal(
     get_url("roboto_bold.ttf"),
 )
+
+font_mono = FontManagerLocal(
+    get_url("roboto_mono.ttf"),
+)
