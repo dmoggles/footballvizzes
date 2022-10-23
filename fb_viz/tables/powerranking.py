@@ -1,9 +1,11 @@
+from typing import Callable, Tuple
 from dbconnect.connector import Connection
 import pandas as pd
 import numpy as np
 from fb_viz.helpers.dataframe_style_helpers import (
     background_gradient_from_another_column,
 )
+import math
 
 
 class PowerRank:
@@ -36,6 +38,40 @@ class PowerRank:
         SELECT * FROM derived.fbref_power_ranking WHERE season = {season}
         """
         return self.connection.query(sql)
+
+    def get_data_last_n_games_player(self, n_games: int, season: int) -> pd.DataFrame:
+        sql = f"""
+            WITH match_index AS (
+                SELECT fb.*, ROW_NUMBER() OVER (PARTITION BY player,squad ORDER BY date DESC) AS rn
+                FROM derived.fbref_power_ranking AS fb WHERE SEASON={season}
+            ) SELECT * FROM match_index WHERE rn <={n_games+1};
+
+        """
+        data = self.connection.query(sql)
+        team_names = self.team_data()
+        data = pd.merge(
+            data, team_names, how="left", left_on="squad", right_on="team_name"
+        )
+        data["opponent"] = data["opponent"].map(
+            team_names.set_index("team_name")["decorated_name"]
+        )
+
+        domestic_leagues = (
+            data.groupby("squad")
+            .agg(
+                {
+                    "comp": lambda x: ",".join(x.unique())
+                    .replace("Champions League", "")
+                    .replace("Europa League", "")
+                    .strip(",")
+                }
+            )
+            .reset_index()
+            .rename(columns={"comp": "domestic league"})
+        )
+        data = pd.merge(left=data, right=domestic_leagues, on="squad", how="left")
+        data = data.loc[data["domestic league"] != ""]
+        return data
 
     def get_data_last_n_games(self, n_games: int, season: int) -> pd.DataFrame:
         sql = f"""
@@ -71,6 +107,10 @@ class PowerRank:
         data = pd.merge(
             data, team_names, how="left", left_on="squad", right_on="team_name"
         )
+        data["opponent"] = data["opponent"].map(
+            team_names.set_index("team_name")["decorated_name"]
+        )
+
         domestic_leagues = (
             data.groupby("squad")
             .agg(
@@ -88,7 +128,8 @@ class PowerRank:
         data = data.loc[data["domestic league"] != ""]
         return data
 
-    def create_rank(self, data: pd.DataFrame, metric_to_use: str) -> pd.DataFrame:
+    def _prev_for_teams(self, data) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
         first_match = (
             data.sort_values("date", ascending=True)
             .groupby(["squad"])
@@ -105,6 +146,43 @@ class PowerRank:
         data = pd.merge(data, last_match, on="squad", how="left")
         prev_data = data.loc[data["match_id"] != data["last_match"]]
         data = data.loc[data["match_id"] != data["first_match"]]
+        return data, prev_data
+
+    def _prev_for_players(self, data) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
+        first_match = (
+            data.sort_values("date", ascending=True)
+            .groupby(["squad", "player"])
+            .apply(lambda x: x["match_id"].unique()[0])
+        )
+        last_match = (
+            data.sort_values("date", ascending=True)
+            .groupby(["squad", "player"])
+            .apply(lambda x: x["match_id"].unique()[-1])
+        )
+        first_match.name = "first_match"
+        last_match.name = "last_match"
+        data = pd.merge(data, first_match, on=["squad", "player"], how="left")
+        data = pd.merge(data, last_match, on=["squad", "player"], how="left")
+        prev_data = data.loc[data["match_id"] != data["last_match"]]
+        data = data.loc[data["match_id"] != data["first_match"]]
+        return data, prev_data
+
+    def create_rank(self, data: pd.DataFrame, metric_to_use: str) -> pd.DataFrame:
+        return self._create_rank(data, metric_to_use, self._prev_for_teams)
+
+    def create_player_rank(
+        self, data: pd.DataFrame, metric_to_use: str
+    ) -> pd.DataFrame:
+        return self._create_rank(data, metric_to_use, self._prev_for_players)
+
+    def _create_rank(
+        self,
+        data: pd.DataFrame,
+        metric_to_use: str,
+        prev_f: Callable[[pd.DataFrame], Tuple[pd.DataFrame, pd.DataFrame]],
+    ) -> pd.DataFrame:
+        data, prev_data = prev_f(data)
         data["squad"] = data["decorated_name"]
         prev_data["squad"] = prev_data["decorated_name"]
         aggregated = (
@@ -432,4 +510,69 @@ class PowerRank:
             ],
         }
         styler.set_table_styles([headers, caption], overwrite=False)
+        return styler
+
+    def format_for_team(self, data: pd.DataFrame, team: str, stat_type: str):
+        curr_total_data, _ = self._prev_for_teams(data)
+        curr_data = curr_total_data.loc[curr_total_data["decorated_name"] == team]
+        curr_data = curr_data.sort_values(by="date", ascending=True)
+        curr_data["date"] = curr_data["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+        table = curr_data.pivot(
+            index="player",
+            columns=["opponent", "comp", "date"],
+            values=stat_type.lower(),
+        )
+        table["Total"] = table.sum(axis=1)
+
+        table = table.sort_values("Total", ascending=False)
+        table = table.reset_index().rename(columns={"player": "Player"})
+
+        styler = table.style
+        styler.set_properties(
+            **{
+                "background-color": "#000011",
+                "color": "ivory",
+                "border": "1px black solid !important",
+            }
+        )
+        styler.format(precision=0)
+        for c in table.columns[1:6]:
+
+            styler.background_gradient(
+                cmap="RdYlGn",
+                subset=pd.IndexSlice[:, c],
+                vmax=curr_total_data["total"].max(),
+                vmin=curr_total_data["total"].min(),
+            )
+        styler.background_gradient(
+            cmap="RdYlGn",
+            subset=pd.IndexSlice[:, "Total"],
+            vmax=curr_total_data.groupby("player").agg({"total": "sum"}).max(),
+            vmin=curr_total_data.groupby("player").agg({"total": "sum"}).min(),
+        )
+        styler.format(lambda x: x.title(), subset=["Player"])
+        headers = {
+            "selector": "th",
+            "props": [
+                ("background-color", "#000022"),
+                ("color", "ivory"),
+                ("font-weight", "bold"),
+                ("text-align", "center"),
+                ("border-bottom-style", "solid"),
+                ("border-bottom-width", "1px"),
+                ("border-bottom-color", "ivory"),
+            ],
+        }
+        styler.hide()
+
+        for c in table.columns[1:6]:
+            styler.applymap(
+                lambda x: "background-color: #333333" if math.isnan(x) else "",
+                subset=pd.IndexSlice[:, c],
+            )
+            styler.format(
+                lambda x: x if not math.isnan(x) else "Did Not Play",
+                subset=pd.IndexSlice[:, c],
+            )
+        styler.set_table_styles([headers], overwrite=False)
         return styler
