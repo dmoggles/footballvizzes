@@ -287,13 +287,13 @@ class MatchSummaryDashboard:
                     home_parenthesis_stat,
                     away_parenthesis_stat,
                 ) = match_stat.generate_parenthesis(data)
-                if (home_stat > away_stat) or (
-                    home_stat < away_stat and match_stat.reverse_success
+                if (home_stat > away_stat and not match_stat.reverse_success) or (
+                    (home_stat < away_stat) and match_stat.reverse_success
                 ):
                     home_color = self.success_color
                     away_color = self.failure_color
-                elif home_stat < away_stat or (
-                    home_stat > away_stat and match_stat.reverse_success
+                elif (home_stat < away_stat and not match_stat.reverse_success) or (
+                    (home_stat > away_stat) and match_stat.reverse_success
                 ):
                     home_color = self.failure_color
                     away_color = self.success_color
@@ -334,13 +334,13 @@ class MatchSummaryDashboard:
                     fontsize=18,
                 )
                 home_stat, away_stat = match_stat.generate(data)
-                if (home_stat > away_stat) or (
-                    home_stat < away_stat and match_stat.reverse_success
+                if (home_stat > away_stat and not match_stat.reverse_success) or (
+                    (home_stat < away_stat) and match_stat.reverse_success
                 ):
                     home_color = self.success_color
                     away_color = self.failure_color
-                elif home_stat < away_stat or (
-                    home_stat > away_stat and match_stat.reverse_success
+                elif (home_stat < away_stat and not match_stat.reverse_success) or (
+                    (home_stat > away_stat) and match_stat.reverse_success
                 ):
                     home_color = self.failure_color
                     away_color = self.success_color
