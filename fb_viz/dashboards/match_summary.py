@@ -1,11 +1,17 @@
 from typing import Tuple
 from footmav.event_aggregation import aggregators as agg
+from footmav.event_aggregation.event_aggregator_processor import event_aggregator
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from matplotlib.patches import FancyBboxPatch
 from fb_viz.helpers.fonts import font_bold, font_normal, font_italic, font_mono
 from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber
 from dbconnect.connector import Connection
+
+
+@event_aggregator
+def npxgot(dataframe):
+    return agg.npxg(dataframe) * agg.shots_on_target(dataframe).astype(int)
 
 
 def agg_minutes(dataframe):
@@ -99,6 +105,12 @@ class MatchStat:
         else:
             return f"{self.name}"
 
+    def format(self, value):
+        if self.precision == 0:
+            return f"{value}"
+        else:
+            return f"{value:.{self.precision}f}"
+
     def generate(self, data):
         if self.precision == 0:
             return tuple([int(round(v)) for v in self.data_generator_f(data)])
@@ -127,6 +139,7 @@ stats = [
     ),
     MatchStat("Big Chances", stat_wrapper(agg.big_chances)),
     MatchStat("NPxG", stat_wrapper(agg.npxg), precision=2),
+    MatchStat("NPxG On Target", stat_wrapper(npxgot), precision=2),
     MatchStat("Pct Possession", agg_minutes, main_pct=True),
     MatchStat(
         "Passes",
@@ -274,7 +287,7 @@ class MatchSummaryDashboard:
 
                 ax.text(
                     0.5,
-                    0.80 - i * 0.05,
+                    0.83 - i * 0.05,
                     f"{match_stat}",
                     color=self.primary_text_color,
                     va="center",
@@ -303,8 +316,8 @@ class MatchSummaryDashboard:
 
                 ax.text(
                     0.15,
-                    0.80 - i * 0.05,
-                    f"{home_stat}{'%' if match_stat.main_pct else ''} ({home_parenthesis_stat}{'%' if match_stat.parenthesis_pct else ''})",
+                    0.83 - i * 0.05,
+                    f"{match_stat.format(home_stat)}{'%' if match_stat.main_pct else ''} ({match_stat.format(home_parenthesis_stat)}{'%' if match_stat.parenthesis_pct else ''})",
                     color=home_color,
                     va="center",
                     ha="left",
@@ -313,8 +326,8 @@ class MatchSummaryDashboard:
                 )
                 ax.text(
                     0.85,
-                    0.80 - i * 0.05,
-                    f"{away_stat}{'%' if match_stat.main_pct else ''} ({away_parenthesis_stat}{'%' if match_stat.parenthesis_pct else ''})",
+                    0.83 - i * 0.05,
+                    f"{match_stat.format(away_stat)}{'%' if match_stat.main_pct else ''} ({match_stat.format(away_parenthesis_stat)}{'%' if match_stat.parenthesis_pct else ''})",
                     color=away_color,
                     va="center",
                     ha="right",
@@ -325,7 +338,7 @@ class MatchSummaryDashboard:
             else:
                 ax.text(
                     0.5,
-                    0.80 - i * 0.05,
+                    0.83 - i * 0.05,
                     f"{match_stat.name}",
                     color=self.primary_text_color,
                     va="center",
@@ -349,8 +362,8 @@ class MatchSummaryDashboard:
                     away_color = self.neutral_color
                 ax.text(
                     0.15,
-                    0.80 - i * 0.05,
-                    f"{home_stat}{'%' if match_stat.main_pct else ''}",
+                    0.83 - i * 0.05,
+                    f"{match_stat.format(home_stat)}{'%' if match_stat.main_pct else ''}",
                     color=home_color,
                     va="center",
                     ha="left",
@@ -359,8 +372,8 @@ class MatchSummaryDashboard:
                 )
                 ax.text(
                     0.85,
-                    0.80 - i * 0.05,
-                    f"{away_stat}{'%' if match_stat.main_pct else ''}",
+                    0.83 - i * 0.05,
+                    f"{match_stat.format(away_stat)}{'%' if match_stat.main_pct else ''}",
                     color=away_color,
                     va="center",
                     ha="right",
@@ -370,7 +383,7 @@ class MatchSummaryDashboard:
             if i < (len(stats) - 1):
 
                 ax.hlines(
-                    [0.775 - i * 0.05],
+                    [0.805 - i * 0.05],
                     0.1,
                     0.9,
                     color=self.primary_text_color,
