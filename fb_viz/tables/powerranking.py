@@ -515,6 +515,7 @@ class PowerRank:
     def format_for_team(self, data: pd.DataFrame, team: str, stat_type: str):
         curr_total_data, _ = self._prev_for_teams(data)
         curr_data = curr_total_data.loc[curr_total_data["decorated_name"] == team]
+        n_games = len(curr_data)
         curr_data = curr_data.sort_values(by="date", ascending=True)
         curr_data["date"] = curr_data["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
         table = curr_data.pivot(
@@ -535,7 +536,7 @@ class PowerRank:
                 "border": "1px black solid !important",
             }
         )
-        styler.format(precision=0)
+
         for c in table.columns[1:6]:
 
             styler.background_gradient(
@@ -561,27 +562,27 @@ class PowerRank:
             ],
         }
         styler.hide()
-
-        for c in table.columns[1:6]:
+        styler.format(precision=0)
+        for c in table.columns[1 : 1 + n_games]:
             styler.applymap(
                 lambda x: "background-color: #333333" if math.isnan(x) else "",
                 subset=pd.IndexSlice[:, c],
             )
             styler.format(
-                lambda x: x if not math.isnan(x) else "Did Not Play",
+                lambda x: f"{x:.0f}" if not math.isnan(x) else "Did Not Play",
                 subset=pd.IndexSlice[:, c],
             )
+
         styler.set_table_styles([headers], overwrite=False)
         return styler
 
-    def format_for_player(
-        self, data: pd.DataFrame, team: str, player: str, n_games: int
-    ):
+    def format_for_player(self, data: pd.DataFrame, team: str, player: str):
         curr_total_data, _ = self._prev_for_teams(data)
         curr_data = curr_total_data.loc[
             (curr_total_data["decorated_name"] == team)
             & (curr_total_data["player"] == player.lower())
         ]
+        n_games = len(curr_data)
         curr_data = curr_data.sort_values(by="date", ascending=True)
         curr_data["date"] = curr_data["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
         curr_data = curr_data[
@@ -627,6 +628,7 @@ class PowerRank:
         styler.hide()
         styler.set_table_styles([headers], overwrite=False)
         styler.format_index(lambda x: x.title(), axis=1)
+
         for c in curr_data.columns[4:]:
 
             styler.background_gradient(
