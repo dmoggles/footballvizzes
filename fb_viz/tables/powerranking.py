@@ -558,9 +558,6 @@ class PowerRank:
                 ("color", "ivory"),
                 ("font-weight", "bold"),
                 ("text-align", "center"),
-                ("border-bottom-style", "solid"),
-                ("border-bottom-width", "1px"),
-                ("border-bottom-color", "ivory"),
             ],
         }
         styler.hide()
@@ -575,4 +572,73 @@ class PowerRank:
                 subset=pd.IndexSlice[:, c],
             )
         styler.set_table_styles([headers], overwrite=False)
+        return styler
+
+    def format_for_player(
+        self, data: pd.DataFrame, team: str, player: str, n_games: int
+    ):
+        curr_total_data, _ = self._prev_for_teams(data)
+        curr_data = curr_total_data.loc[
+            (curr_total_data["decorated_name"] == team)
+            & (curr_total_data["player"] == player.lower())
+        ]
+        curr_data = curr_data.sort_values(by="date", ascending=True)
+        curr_data["date"] = curr_data["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+        curr_data = curr_data[
+            [
+                "date",
+                "comp",
+                "opponent",
+                "rank_position",
+                "defending",
+                "finishing",
+                "progressing",
+                "providing",
+                "keeping",
+                "total",
+            ]
+        ].rename(columns={"rank_position": "Position", "comp": "Competition"})
+        totals = pd.DataFrame(
+            {k: curr_data[k].sum() for k in curr_data.columns[4:]}, index=[0]
+        )
+        totals["date"] = "Total"
+        curr_data = curr_data.append(totals, ignore_index=True).fillna("")
+        styler = curr_data.style
+        styler.set_properties(
+            **{
+                "background-color": "#000011",
+                "color": "ivory",
+                "border": "1px black solid !important",
+            }
+        )
+        styler.format(precision=0)
+        headers = {
+            "selector": "th",
+            "props": [
+                ("background-color", "#000022"),
+                ("color", "ivory"),
+                ("font-weight", "bold"),
+                ("text-align", "center"),
+                ("border-bottom-style", "solid"),
+                ("border-bottom-width", "1px"),
+                ("border-bottom-color", "ivory"),
+            ],
+        }
+        styler.hide()
+        styler.set_table_styles([headers], overwrite=False)
+        styler.format_index(lambda x: x.title(), axis=1)
+        for c in curr_data.columns[4:]:
+
+            styler.background_gradient(
+                cmap="RdYlGn",
+                subset=pd.IndexSlice[0 : n_games - 1, c],
+                vmax=curr_total_data[c].max(),
+                vmin=curr_total_data[c].min(),
+            )
+            styler.background_gradient(
+                cmap="RdYlGn",
+                subset=pd.IndexSlice[n_games, c],
+                vmax=curr_total_data.groupby(["squad", "player"]).sum()[c].max(),
+                vmin=curr_total_data.groupby(["squad", "player"])[c].sum().min(),
+            )
         return styler
