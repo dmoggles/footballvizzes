@@ -1,6 +1,6 @@
 mplsoccer
 seaborn
-sklearn
+scikit-learn
 matplotlib==3.5.3
 git+http://github.com/dmoggles/footmav
 tabulate
