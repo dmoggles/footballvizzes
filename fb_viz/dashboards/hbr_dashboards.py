@@ -13,7 +13,13 @@ from fb_viz.helpers import aggregators
 
 
 class HorizontalBarRanking(ABC):
-    def __init__(self, conn, facecolor="#333333", primary_text_color="ivory", secondary_text_color="grey") -> None:
+    def __init__(
+        self,
+        conn,
+        facecolor="#333333",
+        primary_text_color="ivory",
+        secondary_text_color="grey",
+    ) -> None:
         self._connection = conn
         self._facecolor = facecolor
         self._primary_text_color = primary_text_color
@@ -33,7 +39,9 @@ class HorizontalBarRanking(ABC):
     def format_position(position):
         if position == "LB" or position == "RB":
             return "FB"
-        if position in ["CDM", "CAM"] or (len(position) == 3 and position[0] in ["L", "R"]):
+        if position in ["CDM", "CAM"] or (
+            len(position) == 3 and position[0] in ["L", "R"]
+        ):
             return position[1:]
         if position == "RCDM" or position == "LCDM":
             return "DM"
@@ -108,13 +116,18 @@ class HorizontalBarRanking(ABC):
             constrained_layout=True,
         )
         axes = fig.subplot_mosaic(
-            mosaic=[["header"], ["main"], ["footer"]], gridspec_kw=dict(height_ratios=[0.1, 0.8, 0.1])
+            mosaic=[["header"], ["main"], ["footer"]],
+            gridspec_kw=dict(height_ratios=[0.1, 0.8, 0.1]),
         )
         self.draw_main(axes["main"], prepped_df)
         self._draw_top(data, fig, axes["header"])
         self._draw_bottom(data, fig, axes["footer"])
-        add_image(get_insta_image(), fig, left=0.915, bottom=0.01, width=0.03, height=0.03)
-        add_image(get_twitter_image(), fig, left=0.95, bottom=0.01, width=0.03, height=0.03)
+        add_image(
+            get_insta_image(), fig, left=0.915, bottom=0.01, width=0.03, height=0.03
+        )
+        add_image(
+            get_twitter_image(), fig, left=0.95, bottom=0.01, width=0.03, height=0.03
+        )
 
         return fig
 
@@ -139,7 +152,8 @@ class HorizontalBarRanking(ABC):
         ]
         ax.legend(
             custom_lines,
-            [c.replace("_", " ").title() for c in self.BAR_COLUMNS] + [self.UNDERBAR_COLUMN.replace("_", " ").title()],
+            [c.replace("_", " ").title() for c in self.BAR_COLUMNS]
+            + [self.UNDERBAR_COLUMN.replace("_", " ").title()],
             facecolor=self._facecolor,
             edgecolor=self._facecolor,
             labelcolor=self._primary_text_color,
@@ -177,10 +191,12 @@ class HorizontalBarRanking(ABC):
         home_score = data["home_score"].iloc[0]
         away_score = data["away_score"].iloc[0]
         home_team = data.loc[
-            (data["is_home_team"] == True) & (data["event_type"] != EventType.Carry), "decorated_name"
+            (data["is_home_team"] == True) & (data["event_type"] != EventType.Carry),
+            "decorated_name",
         ].iloc[0]
         away_team = data.loc[
-            (data["is_home_team"] == False) & (data["event_type"] != EventType.Carry), "decorated_name"
+            (data["is_home_team"] == False) & (data["event_type"] != EventType.Carry),
+            "decorated_name",
         ].iloc[0]
         league = data["competition"].iloc[0]
         ax.add_patch(
@@ -216,25 +232,38 @@ class HorizontalBarRanking(ABC):
             fontproperties=font_mono.prop,
             fontsize=20,
         )
+        max_team_length = max(len(home_team), len(away_team))
+        fontsize = 18
+        if max_team_length >= 17:
+            fontsize = 17
+        if max_team_length >= 18:
+            fontsize = 16
+        if max_team_length >= 19:
+            fontsize = 15
+        if max_team_length >= 21:
+            fontsize = 14
+        if max_team_length >= 22:
+            fontsize = 13
+
         ax.text(
-            0.15,
+            0.10,
             0.5,
             f"{home_team}",
             color=self._primary_text_color,
             va="center",
             ha="left",
             fontproperties=font_normal.prop,
-            fontsize=18,
+            fontsize=fontsize,
         )
         ax.text(
-            0.85,
+            0.9,
             0.5,
             f"{away_team}",
             color=self._primary_text_color,
             va="center",
             ha="right",
             fontproperties=font_normal.prop,
-            fontsize=18,
+            fontsize=fontsize,
         )
         ax.text(
             0.5,
@@ -246,8 +275,12 @@ class HorizontalBarRanking(ABC):
             fontproperties=font_normal.prop,
             fontsize=14,
         )
-        home_img = sportsdb_image_grabber(data.loc[data["is_home_team"] == True, "team"].iloc[0], league)
-        away_img = sportsdb_image_grabber(data.loc[data["is_home_team"] == False, "team"].iloc[0], league)
+        home_img = sportsdb_image_grabber(
+            data.loc[data["is_home_team"] == True, "team"].iloc[0], league
+        )
+        away_img = sportsdb_image_grabber(
+            data.loc[data["is_home_team"] == False, "team"].iloc[0], league
+        )
         ax.text(
             0.5,
             -0.3,
@@ -288,17 +321,25 @@ class HorizontalBarRanking(ABC):
             _df = _df.sort_values(self.TOTAL_COLUMN, ascending=False)
             _df["idx"] = range(0, len(_df))
             _df["position"] = _df["position"].apply(lambda x: self.format_position(x))
-            _df["pos_color"] = _df["position"].apply(lambda x: self.get_position_color(x))
+            _df["pos_color"] = _df["position"].apply(
+                lambda x: self.get_position_color(x)
+            )
             for i, (col, color) in enumerate(zip(self.BAR_COLUMNS, self.BAR_COLORS)):
                 if i == 0:
                     ax.barh(
-                        -1 * _df["idx"], m * _df[col], left=m * 0.02 * max_width, color=color, height=0.7, linewidth=0
+                        -1 * _df["idx"],
+                        m * _df[col],
+                        left=m * 0.02 * max_width,
+                        color=color,
+                        height=0.7,
+                        linewidth=0,
                     )
                 else:
                     ax.barh(
                         -1 * _df["idx"],
                         m * _df[col],
-                        left=m * _df[self.BAR_COLUMNS[:i]].sum(axis=1) + m * 0.02 * max_width,
+                        left=m * _df[self.BAR_COLUMNS[:i]].sum(axis=1)
+                        + m * 0.02 * max_width,
                         color=color,
                         height=0.7,
                         linewidth=0,
@@ -341,7 +382,12 @@ class HorizontalBarRanking(ABC):
                     va="center",
                     fontsize=10,
                     fontproperties=font_normal.prop,
-                    bbox=dict(facecolor="ivory", alpha=1, edgecolor="black", boxstyle="round,pad=0.2"),
+                    bbox=dict(
+                        facecolor="ivory",
+                        alpha=1,
+                        edgecolor="black",
+                        boxstyle="round,pad=0.2",
+                    ),
                 )
             topx.barh(
                 -1 * _df["idx"] - 0.35,
@@ -355,7 +401,10 @@ class HorizontalBarRanking(ABC):
 
         ax.set_xbound(-max_width, max_width)
         topx.set_xbound(-max_width_secondary, max_width_secondary)
-        ax.set_ybound(min(-11, max(home_team_df.shape[0], away_team_df.shape[0])) - 0.5, 0.5)
+        ax.set_ybound(min(-11, -max(home_team_df.shape[0], away_team_df.shape[0])), 0.5)
+        topx.set_ybound(
+            min(-11, -max(home_team_df.shape[0], away_team_df.shape[0])), 0.5
+        )
         return ax
 
 
@@ -378,14 +427,17 @@ class HBRProgressiveDistance(HorizontalBarRanking):
             .reset_index()
         )
         grouped_progressives["progressive_distance"] = (
-            grouped_progressives["progressive_carry_distance"] + grouped_progressives["progressive_pass_distance"]
+            grouped_progressives["progressive_carry_distance"]
+            + grouped_progressives["progressive_pass_distance"]
         )
         grouped_progressives["progressive_distance_per_touch"] = (
             grouped_progressives["progressive_distance"]
             / grouped_progressives["touches_attempted"]
             * (grouped_progressives["touches_attempted"] > 5)
         )
-        grouped_progressives = grouped_progressives.loc[grouped_progressives["progressive_distance"] > 30]
+        grouped_progressives = grouped_progressives.loc[
+            grouped_progressives["progressive_distance"] > 30
+        ]
         return grouped_progressives
 
     TOTAL_COLUMN = "progressive_distance"
@@ -397,9 +449,7 @@ class HBRProgressiveDistance(HorizontalBarRanking):
     BAR_COLORS = ["#e66100", "#5d3a9b"]
 
     UNDERBAR_COLOR = "lightblue"
-    EXPLAIN_TEXT = (
-        "Progressive Distance Per Touch\nis on a different scale.  It's useful\nto compare players to each other only"
-    )
+    EXPLAIN_TEXT = "Progressive Distance Per Touch\nis on a different scale.  It's useful\nto compare players to each other only"
 
 
 class HBRExpectedGoalContributions(HorizontalBarRanking):
@@ -418,12 +468,21 @@ class HBRExpectedGoalContributions(HorizontalBarRanking):
                     "position": "first",
                 }
             )
-            .rename(columns={"xa": "expected_assists", "npxg_attempted": "non_penalty_expected_goals"})
+            .rename(
+                columns={
+                    "xa": "expected_assists",
+                    "npxg_attempted": "non_penalty_expected_goals",
+                }
+            )
             .reset_index()
         )
-        grouped["expected_goal_contributions"] = grouped["expected_assists"] + grouped["non_penalty_expected_goals"]
+        grouped["expected_goal_contributions"] = (
+            grouped["expected_assists"] + grouped["non_penalty_expected_goals"]
+        )
         grouped["expected_goal_contributions_per_touch"] = (
-            grouped["expected_goal_contributions"] / grouped["touches_attempted"] * (grouped["touches_attempted"] > 5)
+            grouped["expected_goal_contributions"]
+            / grouped["touches_attempted"]
+            * (grouped["touches_attempted"] > 5)
         )
         grouped = grouped.loc[grouped["expected_goal_contributions"] > 0]
         return grouped
@@ -469,13 +528,19 @@ class HBRChanceCreation(HorizontalBarRanking):
             + grouped["carries_into_the_box"]
         )
         grouped["successful_deliveries_into_penalty_box"] = (
-            grouped["successful_actions_into_box"] / grouped["touches_attempted"] * (grouped["touches_attempted"] > 5)
+            grouped["successful_actions_into_box"]
+            / grouped["touches_attempted"]
+            * (grouped["touches_attempted"] > 5)
         )
         grouped = grouped.loc[grouped["successful_actions_into_box"] > 0]
         return grouped
 
     TOTAL_COLUMN = "successful_actions_into_box"
-    BAR_COLUMNS = ["crosses_completed_into_the_box", "open_play_passes_completed_into_the_box", "carries_into_the_box"]
+    BAR_COLUMNS = [
+        "crosses_completed_into_the_box",
+        "open_play_passes_completed_into_the_box",
+        "carries_into_the_box",
+    ]
     UNDERBAR_COLUMN = "successful_deliveries_into_penalty_box"
 
     TITLE = "Successful Deliveries Into Penalty Box"
@@ -483,6 +548,4 @@ class HBRChanceCreation(HorizontalBarRanking):
     BAR_COLORS = ["#DCB8CB", "#3A7D44", "#181D27"]
 
     UNDERBAR_COLOR = "lightblue"
-    EXPLAIN_TEXT = (
-        "Expected Deliveries Per Touch\nis on a different scale.  It's useful\nto compare players to each other only"
-    )
+    EXPLAIN_TEXT = "Expected Deliveries Per Touch\nis on a different scale.  It's useful\nto compare players to each other only"
