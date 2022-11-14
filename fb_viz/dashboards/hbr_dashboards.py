@@ -549,3 +549,58 @@ class HBRChanceCreation(HorizontalBarRanking):
 
     UNDERBAR_COLOR = "lightblue"
     EXPLAIN_TEXT = "Expected Deliveries Per Touch\nis on a different scale.  It's useful\nto compare players to each other only"
+
+
+class HBRDuels(HorizontalBarRanking):
+    def _prep_dataframe(self, data):
+        aggregators.ground_duels_won(data)
+        aggregators.ground_duels_lost(data)
+        data["aerials_won"] = aggregators.aerials.success(data)
+        aggregators.aerials(data)
+
+        grouped = (
+            data.groupby(["player_name", "team", "is_home_team"])
+            .agg(
+                {
+                    "ground_duels_won": "sum",
+                    "ground_duels_lost": "sum",
+                    "aerials_attempted": "sum",
+                    "aerials_won": "sum",
+                    "position": "first",
+                }
+            )
+            .rename(
+                columns={
+                    "aerials_won": "aerial_duels_won",
+                    "aerials_attempted": "aerial_duels_attempted",
+                }
+            )
+            .reset_index()
+        )
+        grouped["total_duels_attempted"] = (
+            grouped["ground_duels_won"]
+            + grouped["ground_duels_lost"]
+            + grouped["aerial_duels_attempted"]
+        )
+        grouped["total_duels_won"] = (
+            grouped["ground_duels_won"] + grouped["aerial_duels_won"]
+        )
+        grouped["duel_win_percentage"] = (
+            grouped["total_duels_won"] / grouped["total_duels_attempted"]
+        )
+        grouped = grouped.loc[grouped["total_duels_won"] > 0]
+        return grouped
+
+    TOTAL_COLUMN = "total_duels_won"
+    BAR_COLUMNS = [
+        "ground_duels_won",
+        "aerial_duels_won",
+    ]
+    UNDERBAR_COLUMN = "duel_win_percentage"
+
+    TITLE = "Duels Won"
+
+    BAR_COLORS = ["#D2CCA1", "#757780"]
+
+    UNDERBAR_COLOR = "lightblue"
+    EXPLAIN_TEXT = ""

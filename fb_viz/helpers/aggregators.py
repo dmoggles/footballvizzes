@@ -1,6 +1,15 @@
 from footmav.utils import whoscored_funcs as WF
 from footmav.event_aggregation.event_aggregator_processor import event_aggregator
-from footmav.event_aggregation.aggregators import touches, xa, npxg, crosses, open_play_balls_into_box
+from footmav.event_aggregation.aggregators import (
+    touches,
+    xa,
+    npxg,
+    crosses,
+    open_play_balls_into_box,
+    ground_duels_won,
+    aerials,
+    ground_duels_lost,
+)
 from footmav.data_definitions.whoscored.constants import EventType
 
 import numpy as np
@@ -52,4 +61,6 @@ def crosses_completed_into_the_box(dataframe):
 
 @event_aggregator(suffix="")
 def carries_into_the_box(dataframe):
-    return (dataframe["event_type"] == EventType.Carry) & WF.into_attacking_box(dataframe)
+    return (dataframe["event_type"] == EventType.Carry) & WF.into_attacking_box(
+        dataframe
+    )
