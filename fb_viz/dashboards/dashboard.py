@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from fb_viz.helpers.fonts import font_normal, font_bold
 import pandas as pd
 from footmav.data_definitions.whoscored.constants import EventType
-from fb_viz.helpers.mclachbot_helpers import get_mclachhead
+from fb_viz.helpers.mclachbot_helpers import get_mclachhead, get_rainbow_image
 from mplsoccer import add_image
 from fb_viz.helpers.mplsoccer_helpers import make_grid
 from mplsoccer.pitch import Pitch
@@ -21,7 +21,7 @@ class Dashboard(ABC):
     GRID_NCOLS = 1
     HOME_IMAGE_COORDS = (0.05, 0.95, 0.05)
     AWAY_IMAGE_COORDS = (0.95, 0.95, 0.05)
-    MCLACHEAD_COORDS = (0.89, 0.00, 0.07, 0.07)
+    MCLACHEAD_COORDS = (0.89, -0.03, 0.10, 0.10)
     WATERMARK_DICT = dict(
         s="@McLachBot | www.mclachbot.com",
         x=0.99,
@@ -192,7 +192,7 @@ class Dashboard(ABC):
             fig.set_facecolor(pitch_color)
 
             add_image(
-                get_mclachhead(),
+                get_rainbow_image(),
                 fig,
                 left=self.MCLACHEAD_COORDS[0],
                 bottom=self.MCLACHEAD_COORDS[1],

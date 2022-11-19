@@ -12,7 +12,11 @@ def get_image_remote(team_name: str, league: str) -> Image:
 
 
 def get_mclachhead() -> Image:
-    return Image.open(urlopen("https://pbs.twimg.com/profile_images/1490059544734703620/7avjgS-D_400x400.jpg"))
+    return Image.open(
+        urlopen(
+            "https://pbs.twimg.com/profile_images/1490059544734703620/7avjgS-D_400x400.jpg"
+        )
+    )
 
 
 def sportsdb_image_grabber(team: str, league: str):
@@ -23,6 +27,11 @@ def sportsdb_image_grabber(team: str, league: str):
         return Image.open(urlopen(url))
     except HTTPError:
         return None
+
+
+def get_rainbow_image():
+    image = Image.open(urlopen("http://mclachbot.com/site/img/rainbow.png"))
+    return image
 
 
 def team_colours(

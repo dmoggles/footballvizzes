@@ -45,7 +45,7 @@ class PassNetworkDashboard(WithFormationDataMixin, Dashboard):
     )
     HOME_IMAGE_COORDS = (0.18, 0.9, 0.07)
     AWAY_IMAGE_COORDS = (0.9, 0.9, 0.07)
-    MCLACHEAD_COORDS = (0.17, 0.13, 0.07, 0.07)
+    MCLACHEAD_COORDS = (0.17, 0.13, 0.10, 0.10)
     PASS_MININUM = 3
     DEBUG = False
 

@@ -5,8 +5,8 @@ from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from matplotlib.patches import FancyBboxPatch
 from fb_viz.helpers.fonts import font_bold, font_normal, font_italic, font_mono
-from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber
-from dbconnect.connector import Connection
+from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber, get_rainbow_image
+from mplsoccer import add_image
 
 
 @event_aggregator
@@ -414,6 +414,14 @@ class MatchSummaryDashboard:
             ha="center",
             fontproperties=font_italic.prop,
             fontsize=10,
+        )
+        add_image(
+            get_rainbow_image(),
+            fig,
+            0.88,
+            0.02,
+            0.10,
+            0.10,
         )
 
     def draw(self, data):
