@@ -29,8 +29,8 @@ def sportsdb_image_grabber(team: str, league: str):
         return None
 
 
-def get_rainbow_image():
-    image = Image.open(urlopen("http://mclachbot.com/site/img/rainbow.png"))
+def get_rainbow_image(version=""):
+    image = Image.open(urlopen(f"http://mclachbot.com/site/img/rainbow{version}.png"))
     return image
 
 
