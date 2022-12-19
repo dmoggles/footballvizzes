@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import pandas as pd
 from fb_viz.helpers.fonts import font_normal, font_bold, font_mono
-from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber, get_rainbow_image
+from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber, get_mclachhead
 from mplsoccer.pitch import VerticalPitch
 from mplsoccer import add_image
 from matplotlib.figure import Figure
@@ -428,7 +428,7 @@ class HeatmapBars(ABC):
                 size=10,
             )
 
-        add_image(get_rainbow_image(2), fig, 0.86, 0.12, 0.03, 0.06)
+        add_image(get_mclachhead(), fig, 0.86, 0.12, 0.03, 0.06)
 
         return fig
 

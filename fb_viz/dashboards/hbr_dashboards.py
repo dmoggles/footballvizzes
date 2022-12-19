@@ -3,7 +3,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from fb_viz.helpers.fonts import font_normal, font_mono, font_bold, font_italic
-from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber, get_rainbow_image
+from fb_viz.helpers.mclachbot_helpers import sportsdb_image_grabber
 from matplotlib.patches import FancyBboxPatch
 from footmav.data_definitions.whoscored.constants import EventType
 from mplsoccer import add_image
@@ -120,7 +120,7 @@ class HorizontalBarRanking(ABC):
             mosaic=[["header"], ["main"], ["footer"]],
             gridspec_kw=dict(height_ratios=[0.1, 0.8, 0.1]),
         )
-        self.draw_main(axes["main"], fig, prepped_df)
+        self.draw_main(axes["main"], prepped_df)
         self._draw_top(data, fig, axes["header"])
         self._draw_bottom(data, fig, axes["footer"])
         add_image(
@@ -299,7 +299,7 @@ class HorizontalBarRanking(ABC):
         ax3.imshow(away_img)
         ax3.axis("off")
 
-    def draw_main(self, ax: Axes, fig, prepped_df):
+    def draw_main(self, ax: Axes, prepped_df):
         max_value = prepped_df[self.TOTAL_COLUMN].max()
         max_width = max_value * 2
         if self.UNDERBAR_COLUMN:
@@ -399,24 +399,7 @@ class HorizontalBarRanking(ABC):
                 zorder=2,
                 align="edge",
             )
-        if len(home_team_df) <= len(away_team_df):
-            add_image(
-                get_rainbow_image(),
-                fig,
-                left=0.25,
-                bottom=0.10,
-                width=0.12,
-                height=0.12,
-            )
-        else:
-            add_image(
-                get_rainbow_image(),
-                fig,
-                left=0.65,
-                bottom=0.10,
-                width=0.12,
-                height=0.12,
-            )
+
         ax.set_xbound(-max_width, max_width)
         topx.set_xbound(-max_width_secondary, max_width_secondary)
         ax.set_ybound(min(-11, -max(home_team_df.shape[0], away_team_df.shape[0])), 0.5)
