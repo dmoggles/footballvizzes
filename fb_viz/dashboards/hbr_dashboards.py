@@ -100,7 +100,7 @@ class HorizontalBarRanking(ABC):
         data = pd.concat([data1, data2])
         data["sub_id"] = data["sub_id"].fillna(1)
         data = data.sort_values(["period", "minute", "second", "eventId", "sub_id"])
-        data = data.loc[data["position"].isna() == False]
+        # data = data.loc[data["position"].isna() == False]
         return data
 
     @abstractmethod
@@ -320,6 +320,7 @@ class HorizontalBarRanking(ABC):
             else:
                 m = 1
             _df = _df.sort_values(self.TOTAL_COLUMN, ascending=False)
+            _df = _df.loc[_df["position"].isna() == False]
             _df["idx"] = range(0, len(_df))
             _df["position"] = _df["position"].apply(lambda x: self.format_position(x))
             _df["pos_color"] = _df["position"].apply(
