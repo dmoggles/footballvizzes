@@ -10,6 +10,7 @@ from typing import Dict
 from PIL.PngImagePlugin import PngImageFile
 import numpy as np
 from dbconnect.connector import Connection
+import pandas as pd
 
 
 def get_ax_size(ax, fig):
@@ -30,7 +31,7 @@ class TeamOfTheWeek:
         data = conn.query(
             f"""
             SELECT TOTW.*, ML.sportsdbname, ML.sportsdbid, ML.decorated_name, 
-            IF (ISNULL(MT.image_name_override), TOTW.squad, MT.image_name_override) AS image_name_override FROM derived.team_of_the TOTW
+            MT.image_name_override AS image_name_override FROM derived.team_of_the TOTW
             LEFT JOIN football_data.mclachbot_leagues ML ON TOTW.comp = ML.league_name
             LEFT JOIN football_data.mclachbot_teams MT ON TOTW.squad = MT.team_name AND MT.gender=ML.gender
             WHERE team_type = 'team_of_the_week'
@@ -110,9 +111,7 @@ class TeamOfTheWeek:
             x=0.75, y=0.25, width=0.5, length=0.5, ax=ax
         )
         set_visible(badge_image_inset)
-        badge_image_inset.imshow(
-            team_badges[data_position["image_name_override"].iloc[0]], zorder=5
-        )
+        badge_image_inset.imshow(team_badges[data_position["squad"].iloc[0]], zorder=5)
         badge_image_inset.set_facecolor(self.kwargs.get("pitch_color", "#333333"))
         performance_inset = pitch.inset_axes(
             x=0.75, y=0.75, width=0.5, length=0.5, ax=ax
@@ -147,27 +146,27 @@ class TeamOfTheWeek:
                 edgecolor="black",
             )
 
-        # ax.text(
-        #     0.0,
-        #     0.4,
-        #     f'{data_position["player"].iloc[0].title()}',
-        #     ha='left',
-        #     va='center',
-        #     fontsize=10,
-        #     color='ivory',
-        #     fontproperties=font_normal.prop,
-        # )
-
         ax.text(
-            0.5,
+            0.0,
             0.4,
             f'{data_position["player"].iloc[0].title()}',
-            ha="center",
+            ha="left",
             va="center",
             fontsize=10,
             color="ivory",
             fontproperties=font_normal.prop,
         )
+
+        # ax.text(
+        #     0.5,
+        #     0.4,
+        #     f'{data_position["player"].iloc[0].title()}',
+        #     ha="center",
+        #     va="center",
+        #     fontsize=10,
+        #     color="ivory",
+        #     fontproperties=font_normal.prop,
+        # )
 
         texts = "\n".join(
             [
@@ -178,59 +177,69 @@ class TeamOfTheWeek:
                 for i in range(1, 4)
             ]
         )
-        # ax.text(
-        #     0.0,
-        #     0.3,
-        #     texts,
-        #     ha='left',
-        #     va='top',
-        #     fontsize=9,
-        #     color='silver',
-        #     fontproperties=font_normal.prop,
-        # )
         ax.text(
-            0.5,
+            0.0,
             0.3,
             texts,
-            ha="center",
+            ha="left",
             va="top",
             fontsize=9,
             color="silver",
             fontproperties=font_normal.prop,
         )
+        # ax.text(
+        #     0.5,
+        #     0.3,
+        #     texts,
+        #     ha="center",
+        #     va="top",
+        #     fontsize=9,
+        #     color="silver",
+        #     fontproperties=font_normal.prop,
+        # )
 
     def _get_stat_text(self, category, value):
-        category = category.replace("_", " ").title()
+        display_category = category.replace("_", " ").title()
         replacements = {
             "Passes Into Penalty Area": "Passes Into Box",
             "Sca": "Created Shots",
             "Psxg": "PSxG Overperformance",
         }
         no_number_categories = [
-            "Clean Sheet",
-            "Winning Goal",
-            "Equalising Goal",
-            "Opening Goal",
+            "clean_sheet",
+            "winning_goals",
+            "equalising_goals",
+            "opening_goals",
         ]
-        category = replacements.get(category, category)
+        display_category = replacements.get(display_category, display_category)
 
-        if value == 1 and category.endswith("s"):
-            category = category[:-1]
+        if value == 1 and display_category.endswith("s"):
+            display_category = display_category[:-1]
 
         if category in no_number_categories:
-            return category
+            return display_category
+        if category == "pass_completed_pct":
+            value += 0.75
         return (
-            f"{value:.0f} {category}"
+            f"{value:.0f} {display_category}"
             if value.is_integer()
-            else f"{value:.2f} {category}"
+            else f"{value:.2f} {display_category}"
         )
 
     def _get_team_badge_table(self, data):
-        team_names = data["image_name_override"].unique()
+        team_name_table = data[["squad", "image_name_override"]].drop_duplicates()
+        team_name_table["team_name_to_use"] = team_name_table.apply(
+            lambda r: r["squad"]
+            if not pd.isna(r["image_name_override"])
+            else r["squad"].replace("_", " "),
+            axis=1,
+        ).tolist()
         league = data["comp"].iloc[0]
         team_badges = {
-            team_name: sportsdb_image_grabber(team_name.replace("_", " "), league)
-            for team_name in team_names
+            team_name: sportsdb_image_grabber(team_name_to_use, league)
+            for team_name, team_name_to_use in zip(
+                team_name_table["squad"], team_name_table["team_name_to_use"]
+            )
         }
         return team_badges
 
