@@ -1,4 +1,15 @@
 {
-    "editor.formatOnSave": true,
-    "python.formatting.provider": "black"
+  "editor.formatOnSave": true,
+  "python.formatting.provider": "black",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/env": true
+  },
+  "explorerExclude.backup": {},
+  "notebook.output.textLineLimit": 500
 }

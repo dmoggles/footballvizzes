@@ -1,4 +1,5 @@
-mplsoccer
+#mplsoccer
+https://github.com/dmoggles/mplsoccer/archive/features/pitch_ax_insets.zip
 seaborn
 scikit-learn
 matplotlib==3.5.3

@@ -29,6 +29,16 @@ def sportsdb_image_grabber(team: str, league: str):
         return None
 
 
+def sportsdb_league_image_grabber(league: str):
+    league = league.replace(" ", "%20")
+
+    url = f"http://www.mclachbot.com:9000/league_badge_download/{league}"
+    try:
+        return Image.open(urlopen(url))
+    except HTTPError:
+        return None
+
+
 def get_rainbow_image(version=""):
     image = Image.open(urlopen(f"http://mclachbot.com/site/img/rainbow{version}.png"))
     return image
