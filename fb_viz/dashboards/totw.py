@@ -206,7 +206,7 @@ class TeamOfTheWeek:
             "Psxg": "PSxG Overperformance",
         }
         no_number_categories = [
-            "clean_sheet",
+            "clean_sheets",
             "winning_goals",
             "equalising_goals",
             "opening_goals",
