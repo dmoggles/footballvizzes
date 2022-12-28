@@ -94,6 +94,15 @@ class TeamOfTheWeek:
         set_visible(ax_img)
         ax_img.imshow(league_image)
 
+    def _player_name_format(self, player_name):
+        tokens = player_name.split(" ")
+        if len(tokens) > 2:
+            abbreviations = " ".join([f"{t[0].upper()}." for t in tokens[1:-1]])
+
+            return f"{tokens[0].title()} {abbreviations} {tokens[2].title()}"
+        else:
+            return player_name.title()
+
     def _draw_one_position(
         self,
         data,
@@ -145,11 +154,11 @@ class TeamOfTheWeek:
                 linewidth=1,
                 edgecolor="black",
             )
-
+        player_name = self._player_name_format(data_position["player"].iloc[0])
         ax.text(
             0.0,
             0.4,
-            f'{data_position["player"].iloc[0].title()}',
+            player_name,
             ha="left",
             va="center",
             fontsize=10,
