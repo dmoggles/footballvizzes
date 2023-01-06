@@ -24,7 +24,7 @@ setup(
         "requests",
         "mplsoccer",
         "seaborn",
-        "sklearn",
+        "scikit-learn",
         "footmav @ git+http://github.com/dmoggles/footmav",
         "scipy",
         "matplotlib==3.5.3",
