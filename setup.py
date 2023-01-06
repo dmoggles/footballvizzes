@@ -29,6 +29,8 @@ setup(
         "scipy",
         "matplotlib==3.6.0",
         "tabulate",
+        "cmasher",
+        "adjustText",
     ],
     classifiers=[
         "Development Status :: 1 - Planning",
