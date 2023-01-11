@@ -89,7 +89,7 @@ class HorizontalBarRanking(ABC):
         WHERE W.matchId={match_id}
         """
         query2 = f"""
-        SELECT eventId,minute,second,x,y,qualifiers,period,event_type,outcomeType,endX,endY,matchId,season,competition,player_name,match_seconds,team,opponent,is_home_team,sub_id, carryId FROM derived.whoscored_implied_carries 
+        SELECT eventId,minute,second,x,y,qualifiers,period,event_type,outcomeType,endX,endY,matchId,season,competition,player_name,match_seconds,team,opponent,is_home_team,sub_id, carryId FROM derived.whoscored_implied_carries_v2 
         WHERE matchId={match_id}
         """
 
