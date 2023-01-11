@@ -1,9 +1,10 @@
 #mplsoccer
-https://github.com/dmoggles/mplsoccer/archive/features/pitch_ax_insets.zip
+git+http://github.com/dmoggles/mplsoccer
 seaborn
 scikit-learn
-matplotlib==3.5.3
+matplotlib==3.6.0
 git+http://github.com/dmoggles/footmav
 tabulate
 cmasher
 jinja2
+adjustText

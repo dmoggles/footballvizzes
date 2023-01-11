@@ -9,7 +9,6 @@ from matplotlib.axes import Axes
 from typing import Dict
 from PIL.PngImagePlugin import PngImageFile
 import numpy as np
-from dbconnect.connector import Connection
 import pandas as pd
 
 
@@ -22,13 +21,13 @@ def get_ax_size(ax, fig):
 
 
 class TeamOfTheWeek:
-    def __init__(self, **kwargs):
+    def __init__(self, connector, **kwargs):
+        self.conn = connector
         self.kwargs = kwargs
 
     def get_data(self, week, league, season):
-        conn = Connection("M0neyMa$e")
 
-        data = conn.query(
+        data = self.conn.query(
             f"""
             SELECT TOTW.*, ML.sportsdbname, ML.sportsdbid, ML.decorated_name, 
             MT.image_name_override AS image_name_override FROM derived.team_of_the TOTW
@@ -45,8 +44,8 @@ class TeamOfTheWeek:
         return data
 
     def get_overall_data(self, league):
-        conn = Connection("M0neyMa$e")
-        data = conn.query(
+
+        data = self.conn.query(
             f""" 
         SELECT position, shotstopping, distribution, area_control, defending, finishing, providing, progressing FROM derived.fbref_power_ranking_new WHERE comp='{league}'
         """
@@ -93,6 +92,15 @@ class TeamOfTheWeek:
         ax_img.set_facecolor(self.kwargs.get("pitch_color", "#333333"))
         set_visible(ax_img)
         ax_img.imshow(league_image)
+
+    def _player_name_format(self, player_name):
+        tokens = player_name.split(" ")
+        if len(tokens) > 2:
+            abbreviations = " ".join([f"{t[0].upper()}." for t in tokens[1:-1]])
+
+            return f"{tokens[0].title()} {abbreviations} {tokens[2].title()}"
+        else:
+            return player_name.title()
 
     def _draw_one_position(
         self,
@@ -145,11 +153,11 @@ class TeamOfTheWeek:
                 linewidth=1,
                 edgecolor="black",
             )
-
+        player_name = self._player_name_format(data_position["player"].iloc[0])
         ax.text(
             0.0,
             0.4,
-            f'{data_position["player"].iloc[0].title()}',
+            player_name,
             ha="left",
             va="center",
             fontsize=10,
@@ -204,6 +212,7 @@ class TeamOfTheWeek:
             "Passes Into Penalty Area": "Passes Into Box",
             "Sca": "Created Shots",
             "Psxg": "PSxG Overperformance",
+            "Crosses Stopped Gk": "Crosses Claimed",
         }
         no_number_categories = [
             "clean_sheets",
