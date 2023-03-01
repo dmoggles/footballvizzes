@@ -14,7 +14,7 @@ def get_image_remote(team_name: str, league: str) -> Image:
 def get_mclachhead() -> Image:
     return Image.open(
         urlopen(
-            "http://www.mclachbot.com/site/img/mclachbot.jpg"
+            "https://pbs.twimg.com/profile_images/1625635168324050944/Q4K7dWO1_400x400.jpg"
         )
     )
 
