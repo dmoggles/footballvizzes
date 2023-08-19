@@ -465,7 +465,7 @@ class HBRExpectedGoalContributions(HorizontalBarRanking):
             .agg(
                 {
                     "xa": "sum",
-                    "npxg": "sum",
+                    "shooting_npxg": "sum",
                     "touches_attempted": "sum",
                     "position": "first",
                 }
@@ -473,7 +473,7 @@ class HBRExpectedGoalContributions(HorizontalBarRanking):
             .rename(
                 columns={
                     "xa": "expected_assists",
-                    "npxg": "non_penalty_expected_goals",
+                    "shooting_npxg": "non_penalty_expected_goals",
                 }
             )
             .reset_index()
